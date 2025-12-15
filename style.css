@@ -3,7 +3,9 @@ body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    overflow: hidden; 
+    /* 스크롤바가 생기지 않도록 overflow-x를 hidden으로 설정 */
+    overflow-x: hidden; 
+    overflow-y: hidden;
     font-family: 'Noto Sans KR', sans-serif;
     color: #333;
     background-color: #f8f8f8;
@@ -16,10 +18,9 @@ body, html {
     z-index: 10;
 }
 
-/* 사이드바 (★왼쪽 고정, 메뉴는 오른쪽으로 밀어내기★) */
+/* 사이드바 (★너비 해제 및 메뉴의 기반 영역 역할★) */
 #sidebar {
-    width: 300px; /* 메뉴 영역 고정 너비 (트리가 확장될 기본 공간) */
-    min-width: 300px;
+    width: 100%; /* 화면 전체를 기반 영역으로 사용 */
     height: 100%;
     background-color: #fdfdfd;
     padding: 30px 20px;
@@ -27,16 +28,15 @@ body, html {
     position: absolute; 
     left: 0;
     top: 0;
-    overflow-y: auto; 
+    overflow-y: auto; /* 메뉴 세로 스크롤은 허용 */
     z-index: 20; 
-    border-right: 1px solid #eee; /* 메뉴와 콘텐츠 분리선 */
 }
 
-/* ★노드 그룹화 및 배치 수정 (로고는 최좌측 유지)★ */
+/* ★노드 그룹화 및 배치 조정★ */
 #logo-container {
     margin-bottom: 40px;
     position: relative; 
-    padding-left: 0; /* 로고는 0으로 유지 */
+    padding-left: 0; 
 }
 
 #logo {
@@ -48,14 +48,14 @@ body, html {
     display: inline-block;
 }
 
+/* 1단계 하위 메뉴 (소개, 1호) 그룹 */
 .menu-section {
     position: relative;
     margin-bottom: 25px;
-    /* '소개'와 '1호'는 로고보다 우측으로 배치 */
-    padding-left: 30px; 
+    padding-left: 80px; /* 로고보다 우측으로 배치 */
 }
 
-/* ... (나머지 .node 스타일은 이전과 동일) ... */
+/* 모든 노드 기본 스타일 */
 .node {
     padding: 5px 10px;
     margin-bottom: 5px;
@@ -65,14 +65,23 @@ body, html {
     transition: color 0.2s;
     user-select: none;
     display: inline-block; 
-    z-index: 30; /* ★노드가 선 위에 위치하도록 z-index 부여★ */
-    background-color: #fdfdfd; /* 노드가 선을 가리도록 배경색 부여 */
+    z-index: 30; /* 노드가 선 위에 위치하도록 */
+    background-color: #fdfdfd; 
 }
+
+/* ★하위 메뉴 (글 목록) 배치 조정★ */
 .menu-children {
     /* 글 목록은 '1호'보다 더 우측으로 이동 */
-    padding-left: 50px; 
+    padding-left: 80px; 
+    /* ★초기에는 숨겨진 상태 (문제 2 해결)★ */
+    max-height: 0;
+    opacity: 0;
     transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
     overflow: hidden;
+}
+.menu-children.expanded {
+    max-height: 500px; /* 충분히 큰 값으로 설정 */
+    opacity: 1;
 }
 
 .article-item {
@@ -81,21 +90,21 @@ body, html {
     align-items: center;
 }
 
-
-/* 내용 영역 (★핵심 수정: 사이드바를 가리지 않고 우측에 배치★) */
+/* 내용 영역 (★사이드바 가리지 않고 우측에 분리 배치★) */
 #content-area {
     position: absolute;
     top: 0;
-    /* 사이드바 너비(300px)만큼 띄우고 시작 */
-    left: 300px; 
-    width: calc(100% - 300px); /* 나머지 우측 공간 사용 */
+    /* 메뉴 영역(250px)만큼 띄우고 시작 */
+    left: 250px; 
+    width: calc(100% - 250px); /* 나머지 우측 공간 사용 */
     height: 100%;
     background-color: #fff;
     padding: 40px;
     box-sizing: border-box;
     overflow-y: auto;
-    z-index: 30; /* 글 내용은 최상위 */
-    
+    z-index: 30; 
+    border-left: 1px solid #eee;
+
     /* 기본은 오른쪽 끝에 숨겨져 있음 */
     transform: translateX(100%); 
     
@@ -106,7 +115,7 @@ body, html {
     transform: translateX(0); /* 왼쪽으로 슬라이드 인 */
 }
 
-/* SVG 연결선 (★선이 노드 아래에 위치하도록 z-index 수정★) */
+/* SVG 연결선 */
 #connection-lines {
     position: absolute; 
     top: 0;
@@ -114,7 +123,7 @@ body, html {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 15; /* ★Z-index 낮춤: 노드(30)와 내용(30)보다 아래★ */
+    z-index: 15; /* 노드(30)와 내용(30)보다 아래 */
     overflow: visible;
 }
 
