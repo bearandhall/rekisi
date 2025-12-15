@@ -3,7 +3,6 @@ body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    /* 스크롤바가 생기지 않도록 overflow-x를 hidden으로 설정 */
     overflow-x: hidden; 
     overflow-y: hidden;
     font-family: 'Noto Sans KR', sans-serif;
@@ -18,10 +17,11 @@ body, html {
     z-index: 10;
 }
 
-/* 사이드바 (메뉴 기반 영역) */
+/* 사이드바 (★메뉴 영역 고정 및 노드 트리를 위한 공간 확보★) */
 #sidebar {
-    /* ★메뉴 영역 너비를 화면의 절반으로 설정★ */
-    width: 50%; 
+    width: 30%; /* ★왼쪽 30% 영역 고정★ */
+    min-width: 300px;
+    max-width: 400px;
     height: 100%;
     background-color: #fdfdfd;
     padding: 30px 20px;
@@ -34,21 +34,9 @@ body, html {
     border-right: 1px solid #eee;
 }
 
-/* ★노드 그룹화 및 배치 조정★ */
-#logo-container {
-    margin-bottom: 40px;
-    position: relative; 
-    padding-left: 0; 
-}
-
-#logo {
-    font-family: 'Source Code Pro', monospace;
-    font-size: 36px;
-    font-weight: 700;
-    color: #666;
-    cursor: pointer;
-    display: inline-block;
-}
+/* ★노드 그룹화 및 배치 조정 (노드가 오른쪽으로 길게 뻗어나갈 수 있도록)★ */
+#logo-container { margin-bottom: 40px; }
+#logo { /* ... (스타일 유지) ... */ }
 
 /* 1단계 하위 메뉴 (소개, 1호) 그룹 */
 .menu-section {
@@ -80,7 +68,7 @@ body, html {
     overflow: hidden;
 }
 .menu-children.expanded {
-    max-height: 1000px; /* 충분히 큰 값으로 설정 */
+    max-height: 1000px; 
     opacity: 1;
 }
 
@@ -90,28 +78,15 @@ body, html {
     align-items: center;
 }
 
-/* 내용 영역 (★핵심 수정: 사이드바를 가리지 않고 우측 절반에 배치★) */
+/* 내용 영역 (비워둠) */
 #content-area {
+    /* 오른쪽 70% 영역 */
     position: absolute;
     top: 0;
-    left: 50%; /* ★화면의 50% 지점에서 시작★ */
-    width: 50%; /* ★화면의 나머지 절반을 차지★ */
+    left: 30%;
+    width: 70%;
     height: 100%;
-    background-color: #fff;
-    padding: 40px;
-    box-sizing: border-box;
-    overflow-y: auto;
-    z-index: 30; 
-    border-left: 1px solid #eee;
-
-    /* 기본은 오른쪽 끝에 숨겨져 있음 */
-    transform: translateX(100%); 
-    
-    transition: transform 0.4s ease-out;
-}
-
-#content-area.active {
-    transform: translateX(0); /* 왼쪽으로 슬라이드 인 */
+    z-index: 10; 
 }
 
 /* SVG 연결선 */
@@ -126,8 +101,39 @@ body, html {
     overflow: visible;
 }
 
-#connection-lines path {
-    stroke: #b0b0b0;
-    stroke-width: 1.5;
-    fill: none;
+/* ★모달 스타일 (팝업 영역)★ */
+.modal {
+    display: none; /* 기본 숨김 */
+    position: fixed;
+    z-index: 100; 
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4); /* 배경 어둡게 */
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto; /* 화면 중앙 배치 */
+    padding: 30px;
+    border: 1px solid #888;
+    width: 50%; /* ★모달 너비 조정★ */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: #000;
+    text-decoration: none;
 }
