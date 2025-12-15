@@ -48,16 +48,35 @@ document.addEventListener('DOMContentLoaded', () => {
         articlesListDiv.appendChild(itemDiv);
     });
 
-   // ... (script.js 파일 내부의 drawConnections 함수 및 이벤트 리스너 수정)
-
-// ... (생략) ...
-
-// ---------------------------------------------
-// 2. SVG 연결선 그리기 함수
-// ---------------------------------------------
+    // ---------------------------------------------
+    // 2. SVG 연결선 그리기 함수
+    // ---------------------------------------------
     const drawConnections = () => {
-        // ... (Connections 정의 부분 유지) ...
+        connectionLinesSvg.innerHTML = '';
+        
+        const connections = [
+            { parent: 'logo', child: '소개', startType: 'bottom-center' },
+            { parent: 'logo', child: '1호', startType: 'bottom-center' },
+        ];
 
+        const introChildren = document.querySelector('#intro-section .menu-children');
+        if (introChildren.classList.contains('expanded')) {
+            connections.push({ parent: '소개', child: '소개글' });
+        }
+
+        const articlesContainer = document.querySelector('#issue-1-section .menu-children');
+        
+        if (articlesContainer.classList.contains('expanded')) {
+             issue1Articles.forEach(articleId => {
+                 const article = articleData[articleId];
+                 
+                 // 1호 -> 저자 연결
+                 connections.push({ parent: '1호', child: article.author });
+                 // 저자 -> 제목 연결
+                 connections.push({ parent: article.author, child: article.title, type: 'straight' });
+             });
+        }
+        
         const getNodeRect = (nodeId) => {
             const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
             if (!nodeElement) return null;
@@ -65,17 +84,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const rect = nodeElement.getBoundingClientRect();
             let x, y;
             
-            // ★노드의 위치에 sidebar의 스크롤 위치를 더하여 절대 좌표 계산★
-            const scrollY = sidebar.scrollTop; 
-
             if (nodeId === 'logo') { 
                 // 로고 중앙 하단에서 선 시작
-                x = rect.left + rect.width / 2 + window.scrollX;
-                y = rect.top + rect.height + scrollY; // rect.bottom 대신 rect.top + rect.height 사용 + scrollY
+                x = rect.left + rect.width / 2 + window.scrollX; // 중앙 X
+                y = rect.bottom + window.scrollY; // 하단 Y
             } else {
                 // 일반 노드 오른쪽 중앙에서 선 시작
                 x = rect.left + rect.width + window.scrollX;
-                y = rect.top + rect.height / 2 + scrollY; // rect.top + rect.height / 2 사용 + scrollY
+                y = rect.top + rect.height / 2 + window.scrollY;
             }
             
             return { x, y };
@@ -94,30 +110,80 @@ document.addEventListener('DOMContentLoaded', () => {
                 const endX = childPos.x - (childNode ? childNode.offsetWidth : 0); 
                 const endY = childPos.y;
 
-                // ★SVG 좌표는 뷰포트 기준이므로 스크롤 보정값을 준다.★
+                const distanceX = endX - startX;
+                const distanceY = endY - startY;
+
                 const svgStartX = startX - window.scrollX;
-                const svgStartY = startY - sidebar.scrollTop; 
+                const svgStartY = startY - window.scrollY;
                 const svgEndX = endX - window.scrollX;
-                const svgEndY = endY - sidebar.scrollTop; 
-                
-                // ... (나머지 선 그리기 로직 유지) ...
-                
+                const svgEndY = endY - window.scrollY;
+
+                // 선 그리기 타입 결정
                 if (conn.parent === 'logo') {
+                    // 로고에서 뻗어나가는 선: 짧고 급격한 곡선
                     path.setAttribute('d', `M ${svgStartX} ${svgStartY} C ${svgStartX + 10} ${svgStartY + 10}, ${svgEndX - 10} ${svgEndY}, ${svgEndX} ${svgEndY}`);
                 } else if (conn.type === 'straight') {
+                     // 저자 -> 제목 연결: 직선에 가까운 연결 (L-자형)
                     const midX = svgStartX + distanceX * 0.5;
                     path.setAttribute('d', `M ${svgStartX} ${svgStartY} L ${midX} ${svgStartY} L ${midX} ${svgEndY} L ${svgEndX} ${svgEndY}`);
                 } else if (conn.parent === '소개' || conn.parent === '1호') {
+                    // 1단계 하위 노드: 중간 곡선
                     path.setAttribute('d', `M ${svgStartX} ${svgStartY} C ${svgStartX + 40} ${svgStartY}, ${svgEndX - 40} ${svgEndY}, ${svgEndX} ${svgEndY}`);
                 } else {
-                    const distanceX = svgEndX - svgStartX; // SVG 좌표 기준으로 다시 계산
-                    const distanceY = svgEndY - svgStartY;
+                    // 기본 늘어진 곡선
                     path.setAttribute('d', `M ${svgStartX} ${svgStartY} C ${svgStartX + distanceX * 0.1} ${svgStartY + distanceY * 0.9}, ${svgStartX + distanceX * 0.9} ${svgStartY + distanceY * 0.1}, ${svgEndX} ${svgEndY}`);
                 }
                 
                 connectionLinesSvg.appendChild(path);
             }
         });
+    };
+
+    // ---------------------------------------------
+    // 3. 토글 및 모달 표시/닫기 함수
+    // ---------------------------------------------
+
+    const toggleArticlesList = (target) => {
+        const list = target.closest('.menu-section').querySelector('.menu-children');
+        const isExpanded = list.classList.contains('expanded');
+        
+        if (isExpanded) {
+            list.classList.remove('expanded');
+        } else {
+            list.classList.add('expanded');
+        }
+
+        setTimeout(drawConnections, 300);
+    };
+    
+    // 모달 표시 함수
+    const showArticleModal = (articleId) => {
+        const article = articleData[articleId];
+        
+        if (!article) {
+            closeModal();
+            return;
+        }
+
+        // 내용 채우기
+        modalTitle.textContent = article.title;
+        modalMeta.textContent = `${article.author} | ${article.date}`;
+        modalBody.innerHTML = article.content.map(p => `<p>${p}</p>`).join('');
+
+        // 노드 활성화
+        document.querySelectorAll('.node').forEach(node => node.classList.remove('active'));
+        const activeNode = document.querySelector(`[data-article-id="${articleId}"]`);
+        if (activeNode) {
+            activeNode.classList.add('active');
+        }
+        
+        modal.style.display = 'block';
+        modal.scrollTop = 0;
+    };
+    
+    const closeModal = () => {
+        modal.style.display = 'none';
+        document.querySelectorAll('.node').forEach(node => node.classList.remove('active'));
     };
 
     // ---------------------------------------------
@@ -172,4 +238,3 @@ document.addEventListener('DOMContentLoaded', () => {
     // 초기 로드 시 선 그리기
     setTimeout(drawConnections, 10);
 });
-
