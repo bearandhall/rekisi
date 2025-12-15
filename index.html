@@ -3,46 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REKISI - 1호 웹진</title>
+    <title>REKISI WEBZINE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Source+Code+Pro:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="wrapper">
-        <aside id="sidebar">
+        
+        <svg id="connection-lines"></svg>
+
+        <div id="sidebar">
             <div id="logo-container">
-                <div id="logo" class="node" data-node-id="logo">REKISI</div>
+                <div id="logo" data-node-id="logo">REKISI</div>
             </div>
-            
+
             <div id="intro-section" class="menu-section">
-                <div class="node parent menu-parent" data-node-id="소개">소개</div>
-                <div class="menu-children">
-                    <div class="node child article-link" data-node-id="소개글" data-article-id="intro_rekisi">레키시는 ...</div>
-                </div>
+                <div class="node parent toggler" data-node-id="소개" data-article-id="intro_rekisi">소개</div>
+                <div class="menu-children intro-children">
+                    </div>
             </div>
 
             <div id="issue-1-section" class="menu-section">
-                <div class="node parent menu-parent toggler" data-node-id="1호">1호</div>
-                <div class="articles-list menu-children collapsed"> 
+                <div class="node parent toggler" data-node-id="1호">1호</div>
+                <div class="menu-children articles-list">
                     </div>
             </div>
-        </aside>
-
-        <main id="content-area">
-            <div id="article-display">
-                <h2 id="article-title"></h2>
-                <div id="article-meta"></div>
-                <div id="article-body"></div>
-            </div>
+            
             <div id="empty-state">
-                <p>REKISI에 오신 것을 환영합니다!</p>
-                <p>왼쪽 메뉴를 통해 1호 웹진의 글을 열람해주세요.</p>
-            </div>
-        </main>
-    </div>
+                </div>
+        </div>
 
-    <svg id="connection-lines"></svg>
+        <div id="content-area">
+            </div>
+    </div>
+    
+    <div id="article-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <div id="article-display">
+                <h1 id="modal-article-title"></h1>
+                <p id="modal-article-meta"></p>
+                <div id="modal-article-body"></div>
+            </div>
+        </div>
+    </div>
 
     <script src="articles.js"></script>
     <script src="script.js"></script>
