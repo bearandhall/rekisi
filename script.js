@@ -8,11 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoElement = document.getElementById('logo');
     
     // ---------------------------------------------
-    // 1. 글 목록 동적 생성 및 노드 데이터 설정 (저자/제목 분리)
+    // 1. 글 목록 동적 생성 및 노드 데이터 설정
     // ---------------------------------------------
     const issue1Articles = Object.keys(articleData).filter(id => id !== 'intro_rekisi');
     
-    // 소개글 노드를 별도로 정의합니다. (소개 -> 레키시는 ... 연결)
     const introSectionChildren = document.querySelector('#intro-section .menu-children');
     introSectionChildren.innerHTML = `<div class="node title-node article-link" data-node-id="소개글" data-article-id="intro_rekisi">레키시는 ...</div>`;
 
@@ -40,12 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ---------------------------------------------
-    // 2. SVG 연결선 그리기 함수 (★가장 크게 수정됨★)
+    // 2. SVG 연결선 그리기 함수 (★단순화 및 정확도 강화★)
     // ---------------------------------------------
     const drawConnections = () => {
         connectionLinesSvg.innerHTML = '';
         
-        // 연결 관계 정의: (부모 노드 ID) -> (자식 노드 ID)
+        // 연결 관계 정의:
         const connections = [
             { parent: 'logo', child: '소개' },
             { parent: 'logo', child: '1호' },
@@ -57,29 +56,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!articlesContainer.classList.contains('collapsed')) {
              issue1Articles.forEach(articleId => {
                  const article = articleData[articleId];
-                 // 1호 -> 저자 연결
                  connections.push({ parent: '1호', child: article.author });
-                 // 저자 -> 제목 연결
                  connections.push({ parent: article.author, child: article.title });
              });
         }
         
-        // 노드들의 위치와 사이드바 스크롤 위치를 고려하여 정확한 뷰포트 좌표를 가져오는 헬퍼 함수
+        // 노드의 뷰포트 좌표를 가져오는 헬퍼 함수
         const getNodeRect = (nodeId) => {
             const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
             if (!nodeElement) return null;
 
             const rect = nodeElement.getBoundingClientRect();
-            // 뷰포트 기준 좌표
-            const x = rect.left + rect.width; // 노드 오른쪽 끝
-            const y = rect.top + rect.height / 2; // 노드 중앙 y
+            // 스크롤 위치를 고려하여 절대 뷰포트 좌표가 아닌, 문서 상의 좌표를 사용합니다.
+            const x = rect.left + rect.width + window.scrollX; // 노드 오른쪽 끝 (X)
+            const y = rect.top + rect.height / 2 + window.scrollY; // 노드 중앙 (Y)
             
             return { x, y };
         };
 
         connections.forEach(conn => {
             const parentPos = getNodeRect(conn.parent);
-            // 자식 노드는 약간 왼쪽에서 시작하도록 조정
             const childNode = document.querySelector(`[data-node-id="${conn.child}"]`);
             const childPos = getNodeRect(conn.child);
             
@@ -87,10 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 const startX = parentPos.x;
                 const startY = parentPos.y;
-                const endX = childPos.x - childNode.offsetWidth; // ★ 자식 노드 왼쪽에서 시작
+                const endX = childPos.x - childNode.offsetWidth; 
                 const endY = childPos.y;
 
-                // 베지어 곡선 제어점 (느슨하게 축 늘어진 곡선 느낌 강화)
+                // 베지어 곡선 제어점 (느슨하게 축 늘어진 곡선 느낌)
                 const distanceX = endX - startX;
                 const distanceY = endY - startY;
 
@@ -98,16 +94,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const controlY1 = startY + distanceY * 0.9; 
                 const controlX2 = startX + distanceX * 0.9;
                 const controlY2 = startY + distanceY * 0.1;
+                
+                // 선이 사이드바와 스크롤 동기화되도록 (뷰포트 좌표 -> SVG 캔버스 좌표)
+                const svgStartX = startX - window.scrollX;
+                const svgStartY = startY - window.scrollY;
+                const svgEndX = endX - window.scrollX;
+                const svgEndY = endY - window.scrollY;
 
-                // 연결선 그리기 (로고와 소개/1호는 직선에 가깝게, 나머지는 곡선)
                 if (conn.parent === 'logo') {
-                    path.setAttribute('d', `M ${startX} ${startY} L ${endX} ${endY}`);
+                    path.setAttribute('d', `M ${svgStartX} ${svgStartY} L ${svgEndX} ${svgEndY}`);
                 } else if (conn.parent === '소개' || conn.parent === '1호') {
-                    // 1단계 하위 노드: 1차 곡선
-                    path.setAttribute('d', `M ${startX} ${startY} C ${startX + 50} ${startY}, ${endX - 50} ${endY}, ${endX} ${endY}`);
+                    path.setAttribute('d', `M ${svgStartX} ${svgStartY} C ${svgStartX + 50} ${svgStartY}, ${svgEndX - 50} ${svgEndY}, ${svgEndX} ${svgEndY}`);
                 } else {
-                    // 2단계 하위 노드 (저자->제목): 축 늘어진 곡선
-                    path.setAttribute('d', `M ${startX} ${startY} C ${controlX1} ${controlY1}, ${controlX2} ${controlY2}, ${endX} ${endY}`);
+                    path.setAttribute('d', `M ${svgStartX} ${svgStartY} C ${svgStartX + distanceX * 0.1} ${svgStartY + distanceY * 0.9}, ${svgStartX + distanceX * 0.9} ${svgStartY + distanceY * 0.1}, ${svgEndX} ${svgEndY}`);
                 }
                 
                 connectionLinesSvg.appendChild(path);
@@ -116,42 +115,37 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------------
-    // 3. 토글 및 라우팅 함수
+    // 3. 토글 및 화면 전환 함수
     // ---------------------------------------------
 
-    // 글 목록 토글 함수
     const toggleArticlesList = (target) => {
         const list = target.closest('.menu-section').querySelector('.articles-list');
         if (list) {
             const isCollapsed = list.classList.contains('collapsed');
             
             if (isCollapsed) {
-                // 펼치기
-                list.style.maxHeight = list.scrollHeight + "px"; // 내용 높이만큼 설정
+                list.style.maxHeight = list.scrollHeight + "px";
                 list.classList.remove('collapsed');
             } else {
-                // 접기
-                list.style.maxHeight = list.scrollHeight + "px"; // 애니메이션을 위해 현재 높이 설정
+                list.style.maxHeight = list.scrollHeight + "px";
                 setTimeout(() => {
                     list.style.maxHeight = "0"; 
                     list.classList.add('collapsed');
-                }, 10); // 작은 딜레이 후 접는 애니메이션 시작
+                }, 10);
             }
 
-            // 토글 후 선 다시 그리기
-            setTimeout(drawConnections, 300); // CSS transition 시간 후 실행
+            setTimeout(drawConnections, 300);
         }
     };
     
+    // 화면 전환 (문제 1 해결)
     const showArticle = (articleId) => {
         const article = articleData[articleId];
         
-        // 내용 숨김 (초기화면 유지 로직)
         if (!article) {
-            emptyState.style.display = 'block';
-            articleDisplay.style.display = 'none';
+            // 초기 화면 또는 닫기 요청
+            contentArea.classList.remove('active'); // 슬라이드하여 숨김
             document.querySelectorAll('.node').forEach(node => node.classList.remove('active'));
-            // 해시가 있다면 제거
             if (window.location.hash) {
                 window.history.pushState(null, null, '/');
             }
@@ -163,9 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('article-meta').textContent = `${article.author} | ${article.date}`;
         document.getElementById('article-body').innerHTML = article.content.map(p => `<p>${p}</p>`).join('');
 
-        emptyState.style.display = 'none';
-        articleDisplay.style.display = 'block';
-
+        contentArea.classList.add('active'); // 슬라이드하여 보이기
+        
         // 노드 활성화
         document.querySelectorAll('.node').forEach(node => node.classList.remove('active'));
         const activeNode = document.querySelector(`[data-article-id="${articleId}"]`);
@@ -184,50 +177,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---------------------------------------------
     // 4. 이벤트 리스너 및 초기화
     // ---------------------------------------------
-    // 메뉴 클릭 이벤트
     sidebar.addEventListener('click', (event) => {
         const node = event.target.closest('.node');
         if (node) {
             if (node.classList.contains('article-link')) {
-                // 글 제목 클릭 시
                 showArticle(node.dataset.articleId);
             } else if (node.classList.contains('toggler')) {
-                // '1호' (토글러) 클릭 시
                 toggleArticlesList(node);
             }
         }
     });
 
-    // 로고 클릭 이벤트 
+    // 로고 클릭 시 초기 화면으로 복귀 (contentArea 숨김)
     logoElement.addEventListener('click', () => {
-        showArticle(null); // 아무것도 표시하지 않고 초기 상태로 복귀
+        showArticle(null); 
     });
 
-
-    // 주소창 해시 변경 감지
-    window.addEventListener('hashchange', () => {
-        const articleIdFromHash = window.location.hash.substring(1); 
-        if (articleIdFromHash) {
-            showArticle(articleIdFromHash);
-            
-            // 1호 글을 직접 방문하면 1호 목록을 펼치고 선을 다시 그림
-            if (articleData[articleIdFromHash] && articleIdFromHash !== 'intro_rekisi') {
-                 const articlesList = document.querySelector('#issue-1-section .articles-list');
-                 if(articlesList.classList.contains('collapsed')) {
-                     articlesList.style.maxHeight = articlesList.scrollHeight + "px";
-                     articlesList.classList.remove('collapsed');
-                     setTimeout(drawConnections, 300);
-                 }
-            }
-
-        } else {
-            // 해시가 없는 경우 초기 상태로 복귀 (로고 클릭과 동일)
-            showArticle(null); 
+    // 내용 영역 외부를 클릭하면 닫기
+    contentArea.addEventListener('click', (event) => {
+        // 내용 영역의 특정 요소가 아닌, 배경 자체를 클릭했을 경우 닫기
+        if (event.target === contentArea) {
+            showArticle(null);
         }
     });
 
     window.addEventListener('resize', drawConnections);
-    sidebar.addEventListener('scroll', drawConnections); // 사이드바 스크롤 시 선 다시 그리기
+    sidebar.addEventListener('scroll', drawConnections);
 
     // 초기 로드 시: 해시가 없으면 아무것도 표시하지 않음 (문제 2 해결)
     const initialArticleId = window.location.hash.substring(1);
@@ -237,6 +212,5 @@ document.addEventListener('DOMContentLoaded', () => {
         showArticle(null); // 빈 화면 표시
     }
     
-    // 초기 선 그리기
     setTimeout(drawConnections, 10);
 });
