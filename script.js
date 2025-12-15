@@ -10,20 +10,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---------------------------------------------
     const issue1Articles = Object.keys(articleData).filter(id => id !== 'intro_rekisi');
     
+    // 소개글 노드 생성
     const introSectionChildren = document.querySelector('#intro-section .menu-children');
     introSectionChildren.innerHTML = `<div class="node title-node article-link" data-node-id="소개글" data-article-id="intro_rekisi">레키시는 ...</div>`;
 
+    // 1호 글 목록 노드 생성
     issue1Articles.forEach(articleId => {
         const article = articleData[articleId];
         const itemDiv = document.createElement('div');
         itemDiv.classList.add('article-item');
-        itemDiv.dataset.articleId = articleId; // 아이템에도 ID 부여
+        itemDiv.dataset.articleId = articleId; 
         
+        // 저자 노드
         const authorNode = document.createElement('div');
         authorNode.classList.add('node', 'author-node');
         authorNode.dataset.nodeId = article.author;
         authorNode.textContent = article.author;
         
+        // 제목 노드
         const titleNode = document.createElement('div');
         titleNode.classList.add('node', 'title-node', 'article-link');
         titleNode.dataset.nodeId = article.title; 
@@ -44,18 +48,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const connections = [
             { parent: 'logo', child: '소개' },
             { parent: 'logo', child: '1호' },
-            { parent: '소개', child: '소개글' }
         ];
 
+        // '소개' 하위 메뉴 연결 추가
+        const introChildren = document.querySelector('#intro-section .menu-children');
+        if (introChildren.classList.contains('expanded')) {
+            connections.push({ parent: '소개', child: '소개글' });
+        }
+
+
+        // '1호' 하위 메뉴 연결 추가
         const articlesContainer = document.querySelector('#issue-1-section .articles-list');
         const activeArticleId = contentArea.classList.contains('active') ? window.location.hash.substring(1) : null;
 
-        if (!articlesContainer.classList.contains('collapsed')) {
+        if (articlesContainer.classList.contains('expanded')) {
              issue1Articles.forEach(articleId => {
                  const article = articleData[articleId];
                  
-                 // 글이 선택된 상태이고 현재 글이 아니라면 선을 그리지 않음 (목록이 숨겨짐)
-                 if (activeArticleId && activeArticleId !== articleId) {
+                 // 글이 선택된 상태이고 현재 글이 아니라면 선을 그리지 않음 (목록 숨김 효과)
+                 if (activeArticleId && activeArticleId !== articleId && articleId !== 'intro_rekisi') {
                      return; 
                  }
                  
@@ -71,7 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!nodeElement) return null;
 
             const rect = nodeElement.getBoundingClientRect();
+            // 노드의 오른쪽 끝 (선이 시작하는 지점)
             const x = rect.left + rect.width + window.scrollX;
+            // 노드의 중앙 y
             const y = rect.top + rect.height / 2 + window.scrollY;
             
             return { x, y };
@@ -99,9 +112,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // 베지어 곡선 생성
                 if (conn.parent === 'logo') {
+                    // 로고에서 뻗어나가는 선: 짧고 급격한 곡선
                     path.setAttribute('d', `M ${svgStartX} ${svgStartY} C ${svgStartX + 10} ${svgStartY}, ${svgEndX - 10} ${svgEndY}, ${svgEndX} ${svgEndY}`);
                 } else if (conn.parent === '소개' || conn.parent === '1호') {
-                    // 1단계 하위 노드: 1차 곡선
+                    // 1단계 하위 노드: 중간 곡선
                     path.setAttribute('d', `M ${svgStartX} ${svgStartY} C ${svgStartX + 40} ${svgStartY}, ${svgEndX - 40} ${svgEndY}, ${svgEndX} ${svgEndY}`);
                 } else {
                     // 2단계 하위 노드 (저자->제목): 늘어진 곡선
@@ -114,31 +128,28 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------------
-    // 3. 화면 전환 및 목록 정리 함수 (★핵심 수정★)
+    // 3. 토글 및 화면 전환 함수
     // ---------------------------------------------
 
     const toggleArticlesList = (target) => {
-        // ... (토글 로직 유지) ...
-        const list = target.closest('.menu-section').querySelector('.articles-list');
-        if (list) {
-            const isCollapsed = list.classList.contains('collapsed');
-            
-            if (isCollapsed) {
-                list.style.maxHeight = list.scrollHeight + "px";
-                list.classList.remove('collapsed');
-            } else {
-                list.style.maxHeight = list.scrollHeight + "px";
-                setTimeout(() => {
-                    list.style.maxHeight = "0"; 
-                    list.classList.add('collapsed');
-                }, 10);
-            }
-
-            setTimeout(drawConnections, 300);
+        const list = target.closest('.menu-section').querySelector('.menu-children');
+        const isExpanded = list.classList.contains('expanded');
+        
+        // 목록 숨김 해제 (글 보기 상태가 아닐 때만 목록 전체 표시)
+        if (!contentArea.classList.contains('active')) {
+             document.querySelectorAll('.articles-list .article-item').forEach(item => item.style.display = 'flex');
         }
+
+        if (isExpanded) {
+            list.classList.remove('expanded');
+        } else {
+            list.classList.add('expanded');
+        }
+
+        setTimeout(drawConnections, 300);
     };
     
-    // 화면 전환 및 라우팅
+    // 화면 전환 및 목록 정리
     const showArticle = (articleId) => {
         const article = articleData[articleId];
         const allArticleItems = document.querySelectorAll('.articles-list .article-item');
@@ -147,19 +158,18 @@ document.addEventListener('DOMContentLoaded', () => {
             // 초기 화면 복귀: 글 내용 슬라이드 아웃
             contentArea.classList.remove('active'); 
             
-            // 모든 글 항목 다시 표시
+            // 모든 글 항목 다시 표시 (문제 5 해결)
             allArticleItems.forEach(item => item.style.display = 'flex');
 
             document.querySelectorAll('.node').forEach(node => node.classList.remove('active'));
             if (window.location.hash) {
                 window.history.pushState(null, null, '/');
             }
-            // 선 다시 그리기
             setTimeout(drawConnections, 400); 
             return;
         }
 
-        // 글 내용 채우기 (유지)
+        // 내용 채우기 (유지)
         document.getElementById('article-title').textContent = article.title;
         document.getElementById('article-meta').textContent = `${article.author} | ${article.date}`;
         document.getElementById('article-body').innerHTML = article.content.map(p => `<p>${p}</p>`).join('');
@@ -169,10 +179,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // ★선택된 글 제외하고 목록 숨기기 (문제 5 해결)★
         allArticleItems.forEach(item => {
-            if (item.dataset.articleId === articleId) {
-                item.style.display = 'flex';
+            if (item.dataset.articleId === articleId || articleId === 'intro_rekisi') {
+                 // 소개글 클릭 시에는 모든 1호 목록은 숨기지 않음
+                 item.style.display = 'flex';
             } else {
-                item.style.display = 'none';
+                 // 1호 개별 글 클릭 시, 해당 글만 남기고 나머지는 숨김
+                 item.style.display = 'none';
             }
         });
 
@@ -189,11 +201,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.location.hash !== `#${articleId}`) {
              window.history.pushState(null, null, `#${articleId}`);
         }
-        setTimeout(drawConnections, 400); // 목록 변경 후 선 다시 그리기
+        setTimeout(drawConnections, 400);
     };
 
     // ---------------------------------------------
-    // 4. 이벤트 리스너 및 초기화 (유지)
+    // 4. 이벤트 리스너 및 초기화
     // ---------------------------------------------
     sidebar.addEventListener('click', (event) => {
         const node = event.target.closest('.node');
@@ -220,19 +232,23 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', drawConnections);
     sidebar.addEventListener('scroll', drawConnections);
 
-    // 초기 로드 시: 해시 확인 후 표시
+    // 초기 로드 시: 하위 메뉴 숨기기 및 선 그리기
+    document.querySelectorAll('.menu-children').forEach(list => {
+        list.classList.remove('expanded');
+    });
+
     const initialArticleId = window.location.hash.substring(1);
     if (initialArticleId) {
         showArticle(initialArticleId);
-        if (articleData[initialArticleId] && initialArticleId !== 'intro_rekisi') {
-             const articlesList = document.querySelector('#issue-1-section .articles-list');
-             articlesList.style.maxHeight = articlesList.scrollHeight + "px";
-             articlesList.classList.remove('collapsed');
-             // showArticle에서 이미 목록 정리 및 선 그리기를 호출하므로 별도 호출 불필요
+        
+        // '소개' 또는 '1호' 메뉴를 자동으로 펼침
+        if (initialArticleId === 'intro_rekisi') {
+             document.querySelector('#intro-section .menu-children').classList.add('expanded');
+        } else if (articleData[initialArticleId]) {
+             document.querySelector('#issue-1-section .menu-children').classList.add('expanded');
         }
     } else {
-        // 초기에는 목록 전체 표시
-        document.querySelectorAll('.articles-list .article-item').forEach(item => item.style.display = 'flex');
+        // 초기에는 글 내용 영역 숨김
         showArticle(null); 
     }
     
