@@ -18,9 +18,10 @@ body, html {
     z-index: 10;
 }
 
-/* 사이드바 (★너비 해제 및 메뉴의 기반 영역 역할★) */
+/* 사이드바 (메뉴 기반 영역) */
 #sidebar {
-    width: 100%; /* 화면 전체를 기반 영역으로 사용 */
+    /* ★메뉴 영역 너비를 화면의 절반으로 설정★ */
+    width: 50%; 
     height: 100%;
     background-color: #fdfdfd;
     padding: 30px 20px;
@@ -28,8 +29,9 @@ body, html {
     position: absolute; 
     left: 0;
     top: 0;
-    overflow-y: auto; /* 메뉴 세로 스크롤은 허용 */
+    overflow-y: auto; 
     z-index: 20; 
+    border-right: 1px solid #eee;
 }
 
 /* ★노드 그룹화 및 배치 조정★ */
@@ -65,22 +67,20 @@ body, html {
     transition: color 0.2s;
     user-select: none;
     display: inline-block; 
-    z-index: 30; /* 노드가 선 위에 위치하도록 */
+    z-index: 30; 
     background-color: #fdfdfd; 
 }
 
-/* ★하위 메뉴 (글 목록) 배치 조정★ */
+/* 하위 메뉴 (글 목록) 배치 조정 */
 .menu-children {
-    /* 글 목록은 '1호'보다 더 우측으로 이동 */
     padding-left: 80px; 
-    /* ★초기에는 숨겨진 상태 (문제 2 해결)★ */
     max-height: 0;
     opacity: 0;
     transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
     overflow: hidden;
 }
 .menu-children.expanded {
-    max-height: 500px; /* 충분히 큰 값으로 설정 */
+    max-height: 1000px; /* 충분히 큰 값으로 설정 */
     opacity: 1;
 }
 
@@ -90,13 +90,12 @@ body, html {
     align-items: center;
 }
 
-/* 내용 영역 (★사이드바 가리지 않고 우측에 분리 배치★) */
+/* 내용 영역 (★핵심 수정: 사이드바를 가리지 않고 우측 절반에 배치★) */
 #content-area {
     position: absolute;
     top: 0;
-    /* 메뉴 영역(250px)만큼 띄우고 시작 */
-    left: 250px; 
-    width: calc(100% - 250px); /* 나머지 우측 공간 사용 */
+    left: 50%; /* ★화면의 50% 지점에서 시작★ */
+    width: 50%; /* ★화면의 나머지 절반을 차지★ */
     height: 100%;
     background-color: #fff;
     padding: 40px;
@@ -123,7 +122,7 @@ body, html {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 15; /* 노드(30)와 내용(30)보다 아래 */
+    z-index: 15; 
     overflow: visible;
 }
 
