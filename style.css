@@ -10,31 +10,28 @@ body, html {
 }
 
 #wrapper {
-    display: flex;
+    position: relative;
     height: 100vh;
     overflow: hidden;
-    position: relative; 
     z-index: 10;
 }
 
-/* 사이드바 (트리 메뉴) */
+/* 사이드바 (화면 왼쪽 메뉴) */
 #sidebar {
     width: 300px;
-    min-width: 280px;
+    height: 100%;
     background-color: #fdfdfd;
     border-right: 1px solid #eee;
     padding: 30px 20px;
     box-sizing: border-box;
-    position: relative;
+    position: absolute; /* 절대 위치 */
+    left: 0;
+    top: 0;
     overflow-y: auto; 
-    z-index: 10;
+    z-index: 20; /* 가장 위에 위치 */
 }
 
-#logo-container {
-    margin-bottom: 40px;
-    position: relative; 
-}
-
+/* 로고와 메뉴 노드 스타일 */
 #logo {
     font-family: 'Source Code Pro', monospace;
     font-size: 36px;
@@ -42,7 +39,7 @@ body, html {
     color: #666;
     padding-left: 10px;
     cursor: pointer;
-    display: inline-block; /* 중요: 노드의 크기를 최소화 */
+    display: inline-block;
 }
 
 .menu-section {
@@ -56,9 +53,9 @@ body, html {
     cursor: pointer;
     position: relative;
     text-align: left;
-    transition: color 0.2s, transform 0.2s;
+    transition: color 0.2s;
     user-select: none;
-    display: inline-block; /* ★핵심 수정: 노드의 크기를 감싸는 내용만큼으로 제한 */
+    display: inline-block; /* 노드의 크기를 내용만큼으로 제한 */
 }
 
 .node.parent {
@@ -75,34 +72,25 @@ body, html {
 }
 
 .menu-children.collapsed {
-    max-height: 0 !important; /* JS가 설정하는 max-height를 덮어쓰기 */
+    max-height: 0 !important;
     opacity: 0;
-    /* 노드를 숨길 때 선이 그려지지 않도록 처리 (JS에서 제어) */
 }
 
-/* ★ 핵심: 저자 노드와 글 제목 노드를 분리하여 배치 */
+/* 저자-글 목록 스타일 */
 .article-item {
-    display: flex; /* 저자(부모)와 제목(자식)을 가로로 배치 */
+    display: flex; 
     margin-bottom: 5px;
 }
 
-.node.author-node {
-    font-weight: 400;
+.node.author-node, .node.title-node {
     font-size: 0.95em;
-    color: #666;
-    padding-right: 5px;
 }
 
-.node.title-node {
-    font-weight: 500;
-    font-size: 0.95em;
-    color: #333;
-    padding-left: 5px;
-}
+.node.author-node { color: #666; padding-right: 5px; }
+.node.title-node { color: #333; padding-left: 5px; font-weight: 500;}
 
 .node:hover {
     color: #007bff;
-    transform: none; /* 선이 그려지는 동안 위치가 흔들리는 것을 방지 */
 }
 
 .node.active {
@@ -112,65 +100,55 @@ body, html {
     border-radius: 5px;
 }
 
-
-/* 내용 영역 */
+/* 내용 영역 (★화면 통합: 사이드바와 겹치는 영역★) */
 #content-area {
-    flex-grow: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
     padding: 40px;
     box-sizing: border-box;
-    overflow-y: auto; 
-    background-color: #fff;
-    line-height: 1.8;
-    position: relative;
-    z-index: 5;
+    overflow-y: auto;
+    z-index: 30; /* 가장 위에 올라와야 함 */
+    
+    /* 애니메이션: 기본은 숨겨져 있다가 오른쪽에서 나타남 */
+    transform: translateX(100%); 
+    transition: transform 0.4s ease-out;
+}
+
+#content-area.active {
+    transform: translateX(0); /* 왼쪽으로 이동하여 보이기 */
 }
 
 #article-display {
     max-width: 800px;
     margin: 0 auto;
-    display: none; /* ★ 핵심: 초기에는 숨김 */
 }
 
 #empty-state {
-    text-align: center;
-    padding-top: 150px; /* 중앙에 가깝게 배치 */
+    /* ... (이전과 동일하게 유지) ... */
+    padding-top: 150px;
     color: #aaa;
     font-size: 1.4em;
     font-weight: 300;
-    /* ★ 핵심: 초기화면 문구 */
 }
 
-
-/* SVG 연결선 */
+/* SVG 연결선 (★핵심: z-index와 position 조정★) */
 #connection-lines {
-    position: absolute; /* ★ 핵심 수정: fixed 대신 absolute로 변경하여 노드와 스크롤 동기화 */
+    position: absolute; /* #wrapper를 기준으로 배치 */
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 1; 
-    overflow: visible; /* SVG 캔버스가 잘리지 않도록 */
+    z-index: 15; /* 사이드바(20)보다 아래, 내용 영역(30)보다 아래 */
+    overflow: visible;
 }
 
 #connection-lines path {
     stroke: #b0b0b0;
     stroke-width: 1.5;
     fill: none;
-    transition: stroke-width 0.1s ease-out; 
-}
-
-/* (반응형 CSS는 이전과 동일하게 유지) */
-@media (max-width: 768px) {
-    #wrapper {
-        flex-direction: column; 
-    }
-    #sidebar {
-        width: 100%;
-        max-height: 40vh;
-        border-right: none;
-        border-bottom: 1px solid #eee;
-        padding: 20px 15px;
-        position: static;
-    }
 }
