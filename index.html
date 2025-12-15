@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REKISI - 1호 웹진</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="wrapper">
+        <aside id="sidebar">
+            <div id="logo" class="node" data-node-id="logo">REKISI</div>
+            <div id="intro-section">
+                <div class="node parent" data-node-id="소개">소개</div>
+                <div class="node child" data-node-id="소개글" data-article-id="intro_rekisi">레키시는 ...</div>
+            </div>
+
+            <div id="issue-1-section">
+                <div class="node parent" data-node-id="1호">1호</div>
+                <div class="articles-list">
+                    </div>
+            </div>
+        </aside>
+
+        <main id="content-area">
+            <div id="article-display">
+                <h2 id="article-title"></h2>
+                <div id="article-meta"></div>
+                <div id="article-body"></div>
+            </div>
+            <div id="empty-state">
+                <p>왼쪽 메뉴에서 글을 선택해주세요.</p>
+                <p>레키시 1호에 오신 것을 환영합니다!</p>
+            </div>
+        </main>
+    </div>
+
+    <svg id="connection-lines"></svg>
+
+    <script src="articles.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

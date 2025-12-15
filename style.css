@@ -1,0 +1,192 @@
+/* 기본 설정 */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden; /* 스크롤바는 각 섹션에만 */
+    font-family: 'Noto Sans KR', sans-serif;
+    color: #333;
+    background-color: #f8f8f8;
+}
+
+#wrapper {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* 사이드바 (트리 메뉴) */
+#sidebar {
+    width: 300px;
+    min-width: 280px;
+    background-color: #fdfdfd;
+    border-right: 1px solid #eee;
+    padding: 30px 20px;
+    box-sizing: border-box;
+    position: relative;
+    overflow-y: auto; /* 메뉴가 많아지면 스크롤 */
+    z-index: 10;
+}
+
+#logo {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 36px;
+    font-weight: 700;
+    color: #666;
+    margin-bottom: 40px;
+    text-align: left;
+    padding-left: 10px;
+}
+
+.node {
+    padding: 5px 10px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s, transform 0.2s;
+    text-align: left;
+}
+
+.node.parent {
+    font-weight: 700;
+    font-size: 1.1em;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #444;
+}
+
+.node.child {
+    font-weight: 400;
+    font-size: 0.95em;
+    padding-left: 25px; /* 자식 노드는 들여쓰기 */
+    color: #666;
+}
+
+.node:hover {
+    color: #007bff; /* 호버 시 색상 변경 */
+    transform: translateX(5px); /* 살짝 움직이는 효과 */
+}
+
+.node.active {
+    color: #007bff;
+    font-weight: 700;
+}
+
+/* 내용 영역 */
+#content-area {
+    flex-grow: 1;
+    padding: 40px;
+    box-sizing: border-box;
+    overflow-y: auto; /* 글 내용이 길어지면 스크롤 */
+    background-color: #fff;
+    line-height: 1.8;
+    position: relative;
+    z-index: 5;
+}
+
+#article-display {
+    max-width: 800px;
+    margin: 0 auto;
+    display: none; /* 초기에는 숨김 */
+}
+
+#article-title {
+    font-size: 2.2em;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #222;
+}
+
+#article-meta {
+    font-size: 0.9em;
+    color: #777;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
+#article-body {
+    font-size: 1.1em;
+    color: #333;
+}
+
+#article-body p {
+    margin-bottom: 1em;
+}
+
+#empty-state {
+    text-align: center;
+    padding-top: 100px;
+    color: #aaa;
+    font-size: 1.2em;
+}
+
+#empty-state p {
+    margin-bottom: 10px;
+}
+
+/* SVG 연결선 */
+#connection-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* SVG가 클릭을 방해하지 않도록 */
+    z-index: 1; /* 다른 요소들 뒤에 위치 */
+}
+
+#connection-lines path {
+    stroke: #b0b0b0; /* 선 색상 */
+    stroke-width: 1.5; /* 선 두께 */
+    fill: none;
+    transition: stroke-width 0.1s ease-out, stroke 0.1s ease-out; /* 호버 시 변화 애니메이션 */
+}
+
+/* 반응형 디자인 (모바일) */
+@media (max-width: 768px) {
+    #wrapper {
+        flex-direction: column; /* 세로 방향으로 변경 */
+    }
+
+    #sidebar {
+        width: 100%;
+        min-width: auto;
+        height: auto;
+        max-height: 50vh; /* 모바일에서 사이드바 최대 높이 */
+        border-right: none;
+        border-bottom: 1px solid #eee;
+        padding: 20px 15px;
+        position: static;
+    }
+
+    #logo {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 32px;
+    }
+
+    .node {
+        padding: 8px 10px;
+        text-align: center; /* 모바일에서 가운데 정렬 */
+    }
+
+    .node.child {
+        padding-left: 10px; /* 모바일에서는 들여쓰기 줄임 */
+    }
+
+    #content-area {
+        padding: 20px 15px;
+        height: 100%;
+        flex-grow: 1;
+    }
+
+    #article-title {
+        font-size: 1.8em;
+    }
+
+    #empty-state {
+        padding-top: 50px;
+        font-size: 1em;
+    }
+}
