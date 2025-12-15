@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. 글 목록 동적 생성
     // ---------------------------------------------
     // articleData는 별도의 articles.js 파일에 있다고 가정합니다.
+    // (이 부분은 이전과 동일하게 유지됩니다.)
     const issue1Articles = Object.keys(articleData).filter(id => id !== 'intro_rekisi');
     
     // 소개글 노드 생성
@@ -193,26 +194,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const node = event.target.closest('.node');
         
         if (node) {
-            if (node.classList.contains('article-link')) {
+            // 로고 이미지 자체도 노드로 처리될 수 있으므로, 명시적으로 확인합니다.
+            if (node.id === 'logo') {
+                closeModal(); 
+                document.querySelectorAll('.menu-children').forEach(list => list.classList.remove('expanded'));
+                setTimeout(drawConnections, 400);
+            } else if (node.classList.contains('article-link')) {
                 // 글 클릭 시 모달 표시
                 showArticleModal(node.dataset.articleId);
             } else if (node.classList.contains('toggler')) {
                 // 토글러 (소개/1호) 클릭 시
-                // 모달을 닫고
                 closeModal();
-                // 목록을 토글
                 toggleArticlesList(node);
             }
         }
     });
 
-    // 로고 클릭 이벤트 (★PNG 이미지 클릭 가능★)
+    // 로고를 위한 별도 이벤트 리스너 추가 (안정성 강화)
     logoElement.addEventListener('click', () => {
         closeModal(); 
-        // 로고 클릭 시 모든 목록 닫기
         document.querySelectorAll('.menu-children').forEach(list => list.classList.remove('expanded'));
         setTimeout(drawConnections, 400);
     });
+
 
     // 모달 닫기 이벤트
     closeBtn.addEventListener('click', closeModal);
