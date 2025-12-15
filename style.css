@@ -16,9 +16,9 @@ body, html {
     z-index: 10;
 }
 
-/* 사이드바 (★핵심 수정: 화면 전체를 메뉴 영역으로 사용★) */
+/* 사이드바 (★전체 폭 사용, 패딩으로 내용 우측 이동★) */
 #sidebar {
-    width: 100%; /* 화면 전체 너비 사용 */
+    width: 100%; 
     height: 100%;
     background-color: #fdfdfd;
     padding: 30px 20px;
@@ -28,25 +28,32 @@ body, html {
     top: 0;
     overflow-y: auto; 
     z-index: 20; 
-    transition: opacity 0.4s ease-out;
 }
 
-/* 로고와 메뉴 노드 스타일 */
+/* ★노드 그룹화 및 배치 수정★ */
+#logo-container {
+    margin-bottom: 40px;
+    position: relative; 
+    /* 로고 그룹을 우측으로 밀어 선이 뻗어나갈 공간 확보 */
+    padding-left: 150px; 
+}
+
 #logo {
     font-family: 'Source Code Pro', monospace;
     font-size: 36px;
     font-weight: 700;
     color: #666;
-    padding-left: 10px;
     cursor: pointer;
-    display: inline-block; 
+    display: inline-block;
 }
 
-/* ... (나머지 .node, .menu-children 스타일은 이전과 동일하게 유지) ... */
 .menu-section {
     position: relative;
     margin-bottom: 25px;
+    padding-left: 50px; /* '소개'와 '1호'를 로고보다 우측으로 배치 */
 }
+
+/* ... (나머지 .node 스타일은 이전과 동일) ... */
 .node {
     padding: 5px 10px;
     margin-bottom: 5px;
@@ -64,7 +71,8 @@ body, html {
     margin-top: 15px;
 }
 .menu-children {
-    padding-left: 20px; 
+    /* 글 목록은 '1호'보다 더 우측으로 이동 */
+    padding-left: 40px; 
     transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
     overflow: hidden;
 }
@@ -75,6 +83,7 @@ body, html {
 .article-item {
     display: flex; 
     margin-bottom: 5px;
+    align-items: center; /* 저자와 제목을 같은 높이에 정렬 */
 }
 .node.author-node, .node.title-node {
     font-size: 0.95em;
@@ -82,28 +91,28 @@ body, html {
 .node.author-node { color: #666; padding-right: 5px; }
 .node.title-node { color: #333; padding-left: 5px; font-weight: 500;}
 
-/* 내용 영역 (★글릭 시 메뉴를 덮는 오버레이★) */
+/* 내용 영역 (★핵심 수정: 우측 2/3만 차지하며 슬라이드★) */
 #content-area {
     position: absolute;
     top: 0;
-    left: 0;
-    width: 100%;
+    /* 우측 2/3 (예: 66%) 너비 */
+    width: calc(100% - 300px); 
     height: 100%;
     background-color: #fff;
     padding: 40px;
     box-sizing: border-box;
     overflow-y: auto;
     z-index: 30; 
+    border-left: 1px solid #eee;
+
+    /* 기본은 오른쪽 끝에 숨겨져 있음 */
+    right: -100%; 
     
-    /* 기본은 완전히 투명하고 숨겨져 있음 */
-    opacity: 0; 
-    pointer-events: none; /* 클릭을 막아 메뉴를 조작할 수 있도록 */
-    transition: opacity 0.3s ease-in-out;
+    transition: right 0.4s ease-out;
 }
 
 #content-area.active {
-    opacity: 1; /* 나타날 때 불투명하게 */
-    pointer-events: auto; /* 클릭 가능하도록 변경 */
+    right: 0; /* 우측 끝으로 슬라이드 인 */
 }
 
 #article-display {
@@ -112,11 +121,7 @@ body, html {
 }
 
 #empty-state {
-    text-align: center;
-    padding-top: 150px; 
-    color: #aaa;
-    font-size: 1.4em;
-    font-weight: 300;
+    display: none; /* 내용이 없을 때도 메뉴가 넓게 보이므로 빈 상태 메시지는 불필요 */
 }
 
 /* SVG 연결선 (유지) */
@@ -135,5 +140,27 @@ body, html {
     stroke: #b0b0b0;
     stroke-width: 1.5;
     fill: none;
-    transition: stroke-width 0.1s ease-out; 
+}
+
+/* 미디어 쿼리 (모바일) */
+@media (max-width: 768px) {
+    #sidebar {
+        padding-left: 20px;
+    }
+    #logo-container {
+        padding-left: 0;
+    }
+    .menu-section {
+        padding-left: 20px;
+    }
+    .menu-children {
+        padding-left: 20px;
+    }
+    #content-area {
+        width: 100%; /* 모바일에서는 전체 화면을 덮음 */
+        right: -100%;
+    }
+    #content-area.active {
+        right: 0;
+    }
 }
