@@ -1,12 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
-    const contentArea = document.getElementById('content-area');
     const connectionLinesSvg = document.getElementById('connection-lines');
     const articlesListDiv = document.querySelector('.articles-list');
     const logoElement = document.getElementById('logo');
     const introToggler = document.querySelector('[data-node-id="소개"]');
     const issue1Toggler = document.querySelector('[data-node-id="1호"]');
     
+    // 모달 관련 요소
+    const modal = document.getElementById('article-modal');
+    const closeBtn = document.querySelector('.close-btn');
+    const modalTitle = document.getElementById('modal-article-title');
+    const modalMeta = document.getElementById('modal-article-meta');
+    const modalBody = document.getElementById('modal-article-body');
+
     // ---------------------------------------------
     // 1. 글 목록 동적 생성 (유지)
     // ---------------------------------------------
@@ -54,16 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const articlesContainer = document.querySelector('#issue-1-section .menu-children');
-        const activeArticleId = contentArea.classList.contains('active') ? window.location.hash.substring(1) : null;
-
+        // 모달 상태와 관계없이 목록이 펼쳐져 있으면 모든 선을 그립니다. (문제 5 반영)
         if (articlesContainer.classList.contains('expanded')) {
              issue1Articles.forEach(articleId => {
                  const article = articleData[articleId];
-                 
-                 // 글이 선택된 상태에서, 선택된 글만 남기고 나머지 목록 항목의 선은 그리지 않음
-                 if (activeArticleId && activeArticleId !== articleId && articleId !== 'intro_rekisi') {
-                     return; 
-                 }
                  
                  // 1호 -> 저자 연결
                  connections.push({ parent: '1호', child: article.author });
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const rect = nodeElement.getBoundingClientRect();
             let x, y;
             
-            if (nodeId === 'logo') { // ★로고 선 시작점 조정 (문제 2 해결)
+            if (nodeId === 'logo') { // 로고 선 시작점 조정 (문제 2 해결)
                 x = rect.left + rect.width / 2 + window.scrollX; // 중앙 X
                 y = rect.bottom + window.scrollY; // 하단 Y
             } else {
@@ -112,10 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // 선 그리기 타입 결정
                 if (conn.parent === 'logo') {
-                    // 로고에서 뻗어나가는 선: 짧고 급격한 곡선
                     path.setAttribute('d', `M ${svgStartX} ${svgStartY} C ${svgStartX + 10} ${svgStartY + 10}, ${svgEndX - 10} ${svgEndY}, ${svgEndX} ${svgEndY}`);
                 } else if (conn.type === 'straight') {
-                     // 저자 -> 제목 연결: 직선에 가까운 연결 (가로로 길게)
+                     // 저자 -> 제목 연결: 직선에 가까운 연결
                     const midX = svgStartX + distanceX * 0.5;
                     path.setAttribute('d', `M ${svgStartX} ${svgStartY} L ${midX} ${svgStartY} L ${midX} ${svgEndY} L ${svgEndX} ${svgEndY}`);
                 } else if (conn.parent === '소개' || conn.parent === '1호') {
@@ -132,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------------
-    // 3. 토글 및 화면 전환 함수
+    // 3. 토글 및 모달 표시 함수
     // ---------------------------------------------
 
     const toggleArticlesList = (target) => {
@@ -148,61 +147,34 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(drawConnections, 300);
     };
     
-    // 화면 전환 및 목록 정리
-    const showArticle = (articleId) => {
+    // 모달 표시 함수 (문제 2, 4 해결)
+    const showArticleModal = (articleId) => {
         const article = articleData[articleId];
-        const allArticleItems = document.querySelectorAll('.articles-list .article-item');
         
         if (!article) {
-            // 초기 화면 복귀: 글 내용 슬라이드 아웃
-            contentArea.classList.remove('active'); 
-            
-            // 모든 글 항목 다시 표시
-            allArticleItems.forEach(item => item.style.display = 'flex');
-            
-            document.querySelectorAll('.node').forEach(node => node.classList.remove('active'));
-            if (window.location.hash) {
-                window.history.pushState(null, null, '/');
-            }
-            setTimeout(drawConnections, 400); 
+            closeModal();
             return;
         }
 
-        // 내용 채우기 (문제 1 해결)
-        document.getElementById('article-title').textContent = article.title;
-        document.getElementById('article-meta').textContent = `${article.author} | ${article.date}`;
-        document.getElementById('article-body').innerHTML = article.content.map(p => `<p>${p}</p>`).join('');
+        // 내용 채우기
+        modalTitle.textContent = article.title;
+        modalMeta.textContent = `${article.author} | ${article.date}`;
+        modalBody.innerHTML = article.content.map(p => `<p>${p}</p>`).join('');
 
-        // 글 내용 슬라이드 인
-        contentArea.classList.add('active'); 
-        
-        // ★선택된 글 제외하고 목록 숨기기★
-        allArticleItems.forEach(item => {
-            if (item.dataset.articleId === articleId) {
-                 item.style.display = 'flex';
-            } else {
-                 item.style.display = 'none';
-            }
-        });
-        
-        // '소개글' 클릭 시 1호 목록은 유지
-        if (articleId === 'intro_rekisi') {
-             allArticleItems.forEach(item => item.style.display = 'flex');
-        }
-
-        // 노드 활성화 및 스크롤
+        // 노드 활성화
         document.querySelectorAll('.node').forEach(node => node.classList.remove('active'));
         const activeNode = document.querySelector(`[data-article-id="${articleId}"]`);
         if (activeNode) {
             activeNode.classList.add('active');
         }
-
-        contentArea.scrollTop = 0;
         
-        if (window.location.hash !== `#${articleId}`) {
-             window.history.pushState(null, null, `#${articleId}`);
-        }
-        setTimeout(drawConnections, 400);
+        modal.style.display = 'block';
+        modal.scrollTop = 0;
+    };
+    
+    const closeModal = () => {
+        modal.style.display = 'none';
+        document.querySelectorAll('.node').forEach(node => node.classList.remove('active'));
     };
 
     // ---------------------------------------------
@@ -212,55 +184,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const node = event.target.closest('.node');
         if (node) {
             if (node.classList.contains('article-link')) {
-                showArticle(node.dataset.articleId);
+                // 글 클릭 시 모달 표시
+                showArticleModal(node.dataset.articleId);
             } else if (node.classList.contains('toggler')) {
-                // '1호' 또는 '소개' 토글러를 클릭했을 때
-                if (contentArea.classList.contains('active')) {
-                    // 글 내용이 열려있으면 닫아라 (문제 5 해결)
-                    showArticle(null); 
-                }
-                // 목록은 닫은 후에 토글
+                // 토글러 클릭 시
                 toggleArticlesList(node);
             }
         }
     });
 
     logoElement.addEventListener('click', () => {
-        showArticle(null); 
-        // 로고 클릭 시 모든 목록 닫기
+        closeModal(); 
         document.querySelectorAll('.menu-children').forEach(list => list.classList.remove('expanded'));
         setTimeout(drawConnections, 400);
     });
 
-    // ESC 키로 글 내용 닫기 (메뉴 복귀)
+    // 모달 닫기 이벤트
+    closeBtn.addEventListener('click', closeModal);
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && contentArea.classList.contains('active')) {
-            showArticle(null);
+        if (event.key === 'Escape') {
+            closeModal();
         }
     });
 
     window.addEventListener('resize', drawConnections);
     sidebar.addEventListener('scroll', drawConnections);
 
-    // 초기 로드 시: 하위 메뉴 숨기기 및 해시 처리
+    // 초기 로드 시: 하위 메뉴 숨기기 및 선 그리기
     document.querySelectorAll('.menu-children').forEach(list => {
         list.classList.remove('expanded');
     });
-
-    const initialArticleId = window.location.hash.substring(1);
-    if (initialArticleId) {
-        showArticle(initialArticleId);
-        
-        // 해당 섹션 펼치기
-        if (initialArticleId === 'intro_rekisi') {
-             introToggler.closest('.menu-section').querySelector('.menu-children').classList.add('expanded');
-        } else if (articleData[initialArticleId]) {
-             issue1Toggler.closest('.menu-section').querySelector('.menu-children').classList.add('expanded');
-        }
-    } else {
-        // 초기에는 글 내용 영역 숨김
-        showArticle(null); 
-    }
     
     setTimeout(drawConnections, 10);
 });
