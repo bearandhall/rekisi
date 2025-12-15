@@ -1,85 +1,19 @@
-/* 기본 설정 */
-body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    /* 가로 스크롤 방지 및 세로 스크롤 허용 */
-    overflow-x: hidden; 
-    overflow-y: hidden;
-    font-family: 'Noto Sans KR', sans-serif;
-    color: #333;
-    background-color: #f8f8f8;
-}
+/* style.css 파일의 #wrapper와 #connection-lines 부분만 재확인/수정 */
 
 #wrapper {
     position: relative;
     height: 100vh;
-    overflow: hidden;
+    overflow: hidden; /* ★최상위 wrapper는 overflow hidden 유지★ */
     z-index: 10;
 }
 
-/* 사이드바 (★화면 전체 영역으로 확장★) */
+/* 사이드바 (화면 전체 영역을 사용하며 세로 스크롤 허용) */
 #sidebar {
-    width: 100%; /* ★화면 전체 너비 사용★ */
+    width: 100%; 
     height: 100%;
-    background-color: #fdfdfd;
-    padding: 30px 20px;
-    box-sizing: border-box;
-    position: absolute; 
-    left: 0;
-    top: 0;
-    overflow-y: auto; 
+    /* ... (나머지 스타일 유지) ... */
+    overflow-y: auto; /* ★메뉴 스크롤 허용★ */
     z-index: 20; 
-    border-right: none; /* 전체 화면 사용이므로 경계선 제거 */
-}
-
-/* ★로고 이미지 스타일★ */
-#logo {
-    display: block;
-    width: 150px; /* 로고 이미지 크기 조정 */
-    height: auto;
-    cursor: pointer;
-    margin-bottom: 20px;
-}
-
-/* 1단계 하위 메뉴 (소개, 1호) 그룹 */
-.menu-section {
-    position: relative;
-    margin-bottom: 25px;
-    padding-left: 80px; /* 로고보다 우측으로 배치 */
-}
-
-/* 모든 노드 기본 스타일 */
-.node {
-    padding: 5px 10px;
-    margin-bottom: 5px;
-    cursor: pointer;
-    position: relative;
-    text-align: left;
-    transition: color 0.2s;
-    user-select: none;
-    display: inline-block; 
-    z-index: 30; 
-    background-color: #fdfdfd; 
-}
-
-/* 하위 메뉴 (글 목록) 배치 조정 */
-.menu-children {
-    padding-left: 80px; 
-    max-height: 0;
-    opacity: 0;
-    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
-    overflow: hidden;
-}
-.menu-children.expanded {
-    max-height: 1000px; 
-    opacity: 1;
-}
-
-.article-item {
-    display: flex; 
-    margin-bottom: 5px;
-    align-items: center;
 }
 
 /* SVG 연결선 */
@@ -90,38 +24,14 @@ body, html {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 15; 
-    overflow: visible;
+    z-index: 15; /* 노드(30)보다 아래 */
+    /* ★스크롤이 발생해도 선이 잘리지 않도록 overflow를 visible로 유지★ */
+    overflow: visible; 
 }
 
-/* ★모달 스타일 (유지)★ */
-.modal {
-    display: none; 
-    position: fixed;
-    z-index: 100; 
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4); 
+/* 노드 Z-Index 유지 */
+.node {
+    /* ... (스타일 유지) ... */
+    z-index: 30; 
+    background-color: #fdfdfd; 
 }
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 10% auto; 
-    padding: 30px;
-    border: 1px solid #888;
-    width: 50%; 
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    position: relative;
-}
-
-.close-btn {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-/* ... (나머지 모달 스타일 유지) ... */
