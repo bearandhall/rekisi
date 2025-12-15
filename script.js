@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const article = articleData[articleId];
         const itemDiv = document.createElement('div');
         itemDiv.classList.add('article-item');
+        itemDiv.dataset.articleId = articleId; // 아이템에도 ID 부여
         
         const authorNode = document.createElement('div');
         authorNode.classList.add('node', 'author-node');
@@ -35,27 +36,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ---------------------------------------------
-    // 2. SVG 연결선 그리기 함수 (★좌표 조정 및 저자-제목 연결 추가★)
+    // 2. SVG 연결선 그리기 함수
     // ---------------------------------------------
     const drawConnections = () => {
         connectionLinesSvg.innerHTML = '';
         
         const connections = [
-            // REKISI 로고는 왼쪽 끝에 위치
-            { parent: 'logo', child: '소개', startAdjust: -150 }, // 로고 시작점 왼쪽으로 조정
-            { parent: 'logo', child: '1호', startAdjust: -150 }, 
-            
-            // 소개 -> 소개글
+            { parent: 'logo', child: '소개' },
+            { parent: 'logo', child: '1호' },
             { parent: '소개', child: '소개글' }
         ];
 
         const articlesContainer = document.querySelector('#issue-1-section .articles-list');
+        const activeArticleId = contentArea.classList.contains('active') ? window.location.hash.substring(1) : null;
+
         if (!articlesContainer.classList.contains('collapsed')) {
              issue1Articles.forEach(articleId => {
                  const article = articleData[articleId];
+                 
+                 // 글이 선택된 상태이고 현재 글이 아니라면 선을 그리지 않음 (목록이 숨겨짐)
+                 if (activeArticleId && activeArticleId !== articleId) {
+                     return; 
+                 }
+                 
                  // 1호 -> 저자 연결
                  connections.push({ parent: '1호', child: article.author });
-                 // ★저자 -> 제목 연결 (문제 3 해결)
+                 // 저자 -> 제목 연결
                  connections.push({ parent: article.author, child: article.title });
              });
         }
@@ -65,9 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!nodeElement) return null;
 
             const rect = nodeElement.getBoundingClientRect();
-            // 노드의 오른쪽 끝 (선이 시작하는 지점)
             const x = rect.left + rect.width + window.scrollX;
-            // 노드의 중앙 y
             const y = rect.top + rect.height / 2 + window.scrollY;
             
             return { x, y };
@@ -80,17 +84,14 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (parentPos && childPos) {
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                // 시작점: (선 조정이 필요한 경우 적용)
-                const startX = parentPos.x + (conn.startAdjust || 0); 
+                const startX = parentPos.x; 
                 const startY = parentPos.y;
-                // 끝점: 자식 노드의 왼쪽 끝
                 const endX = childPos.x - (childNode ? childNode.offsetWidth : 0); 
                 const endY = childPos.y;
 
                 const distanceX = endX - startX;
                 const distanceY = endY - startY;
 
-                // SVG 캔버스 좌표로 변환 (스크롤 보정)
                 const svgStartX = startX - window.scrollX;
                 const svgStartY = startY - window.scrollY;
                 const svgEndX = endX - window.scrollX;
@@ -98,13 +99,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // 베지어 곡선 생성
                 if (conn.parent === 'logo') {
-                    // 로고는 REKISI 글자 왼쪽에서 선이 시작되도록 강제 조정
-                    path.setAttribute('d', `M ${svgStartX} ${svgStartY} L ${svgEndX} ${svgEndY}`);
-                } else if (conn.parent === '소개' || conn.parent === '1호' || conn.parent === articleData[conn.parent]?.author) {
-                    // 1단계 하위 노드 (저자 포함): 1차 곡선
-                    path.setAttribute('d', `M ${svgStartX} ${svgStartY} C ${svgStartX + 50} ${svgStartY}, ${svgEndX - 50} ${svgEndY}, ${svgEndX} ${svgEndY}`);
+                    path.setAttribute('d', `M ${svgStartX} ${svgStartY} C ${svgStartX + 10} ${svgStartY}, ${svgEndX - 10} ${svgEndY}, ${svgEndX} ${svgEndY}`);
+                } else if (conn.parent === '소개' || conn.parent === '1호') {
+                    // 1단계 하위 노드: 1차 곡선
+                    path.setAttribute('d', `M ${svgStartX} ${svgStartY} C ${svgStartX + 40} ${svgStartY}, ${svgEndX - 40} ${svgEndY}, ${svgEndX} ${svgEndY}`);
                 } else {
-                    // 2단계 하위 노드 (글 제목): 늘어진 곡선
+                    // 2단계 하위 노드 (저자->제목): 늘어진 곡선
                     path.setAttribute('d', `M ${svgStartX} ${svgStartY} C ${svgStartX + distanceX * 0.1} ${svgStartY + distanceY * 0.9}, ${svgStartX + distanceX * 0.9} ${svgStartY + distanceY * 0.1}, ${svgEndX} ${svgEndY}`);
                 }
                 
@@ -114,10 +114,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------------
-    // 3. 화면 전환 함수 (★글 내용 우측 슬라이드 인/아웃★)
+    // 3. 화면 전환 및 목록 정리 함수 (★핵심 수정★)
     // ---------------------------------------------
 
     const toggleArticlesList = (target) => {
+        // ... (토글 로직 유지) ...
         const list = target.closest('.menu-section').querySelector('.articles-list');
         if (list) {
             const isCollapsed = list.classList.contains('collapsed');
@@ -140,26 +141,42 @@ document.addEventListener('DOMContentLoaded', () => {
     // 화면 전환 및 라우팅
     const showArticle = (articleId) => {
         const article = articleData[articleId];
+        const allArticleItems = document.querySelectorAll('.articles-list .article-item');
         
         if (!article) {
-            // 글 내용 슬라이드 아웃 (오른쪽으로 숨김)
+            // 초기 화면 복귀: 글 내용 슬라이드 아웃
             contentArea.classList.remove('active'); 
             
+            // 모든 글 항목 다시 표시
+            allArticleItems.forEach(item => item.style.display = 'flex');
+
             document.querySelectorAll('.node').forEach(node => node.classList.remove('active'));
             if (window.location.hash) {
                 window.history.pushState(null, null, '/');
             }
+            // 선 다시 그리기
+            setTimeout(drawConnections, 400); 
             return;
         }
 
-        // 내용 채우기
+        // 글 내용 채우기 (유지)
         document.getElementById('article-title').textContent = article.title;
         document.getElementById('article-meta').textContent = `${article.author} | ${article.date}`;
         document.getElementById('article-body').innerHTML = article.content.map(p => `<p>${p}</p>`).join('');
 
-        contentArea.classList.add('active'); // 글 내용 슬라이드 인
+        // 글 내용 슬라이드 인
+        contentArea.classList.add('active'); 
         
-        // 노드 활성화
+        // ★선택된 글 제외하고 목록 숨기기 (문제 5 해결)★
+        allArticleItems.forEach(item => {
+            if (item.dataset.articleId === articleId) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // 노드 활성화 및 스크롤
         document.querySelectorAll('.node').forEach(node => node.classList.remove('active'));
         const activeNode = document.querySelector(`[data-article-id="${articleId}"]`);
         if (activeNode) {
@@ -168,14 +185,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         contentArea.scrollTop = 0;
         
-        // 해시 라우팅: 주소창 업데이트 
+        // 해시 라우팅 및 선 다시 그리기
         if (window.location.hash !== `#${articleId}`) {
              window.history.pushState(null, null, `#${articleId}`);
         }
+        setTimeout(drawConnections, 400); // 목록 변경 후 선 다시 그리기
     };
 
     // ---------------------------------------------
-    // 4. 이벤트 리스너 및 초기화
+    // 4. 이벤트 리스너 및 초기화 (유지)
     // ---------------------------------------------
     sidebar.addEventListener('click', (event) => {
         const node = event.target.closest('.node');
@@ -188,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 로고 클릭 시 초기 화면으로 복귀 (글 내용 슬라이드 아웃)
     logoElement.addEventListener('click', () => {
         showArticle(null); 
     });
@@ -203,18 +220,19 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', drawConnections);
     sidebar.addEventListener('scroll', drawConnections);
 
-    // 초기 로드 시: 해시 확인 후 표시, 없으면 글 내용 슬라이드 아웃 (메뉴 복귀)
+    // 초기 로드 시: 해시 확인 후 표시
     const initialArticleId = window.location.hash.substring(1);
     if (initialArticleId) {
         showArticle(initialArticleId);
-        // 만약 1호 글이라면, 자동으로 목록 펼치기
         if (articleData[initialArticleId] && initialArticleId !== 'intro_rekisi') {
              const articlesList = document.querySelector('#issue-1-section .articles-list');
              articlesList.style.maxHeight = articlesList.scrollHeight + "px";
              articlesList.classList.remove('collapsed');
-             setTimeout(drawConnections, 300);
+             // showArticle에서 이미 목록 정리 및 선 그리기를 호출하므로 별도 호출 불필요
         }
     } else {
+        // 초기에는 목록 전체 표시
+        document.querySelectorAll('.articles-list .article-item').forEach(item => item.style.display = 'flex');
         showArticle(null); 
     }
     
