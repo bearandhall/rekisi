@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // ---------------------------------------------
-    // 2. Drag & Drop 로직 (유지)
+    // 2. Drag & Drop 로직
     // ---------------------------------------------
     
     const getClientCoords = (e) => {
@@ -110,7 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const startDrag = (e) => {
         const targetNode = e.target.closest('.draggable-node');
-        if (!targetNode || e.target.closest('.node-action-btn')) return;
+        
+        // ★수정: 버튼 클릭 시 드래그 막고, 기본 동작도 차단 (모바일 점프 현상 방지)★
+        if (!targetNode || e.target.closest('.node-action-btn')) {
+            e.preventDefault(); 
+            return;
+        }
 
         draggedElement = targetNode;
         
@@ -121,7 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         draggedElement.style.zIndex = 40; 
 
-        if (e.type === 'touchstart') {
+        // ★수정: mousedown과 touchstart 모두에서 기본 동작 차단 강화★
+        if (e.type === 'touchstart' || e.type === 'mousedown') {
             e.preventDefault(); 
         }
     };
@@ -141,7 +147,9 @@ document.addEventListener('DOMContentLoaded', () => {
         draggedElement.style.left = `${newX}px`;
         draggedElement.style.top = `${newY}px`;
         
-        requestAnimationFrame(drawConnections);
+        // ★수정: 드래그 중에는 requestAnimationFrame 호출 제거 (scroll 이벤트에 맡김)★
+        // requestAnimationFrame(drawConnections);
+        drawConnections(); // 동기적으로 호출하여 선 분리 최소화
     };
 
     const endDrag = () => {
@@ -299,12 +307,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (article && article.author_intro) {
              showArticleModal(
-                `저자: ${authorName}`, 
-                null, 
-                article.author_intro, 
-                ['이 곳에서 작가의 다른 글을 확인하실 수 있습니다.'],
-                'author'
-            );
+                 `저자: ${authorName}`, 
+                 null, 
+                 article.author_intro, 
+                 ['이 곳에서 작가의 다른 글을 확인하실 수 있습니다.'],
+                 'author'
+             );
         } else {
             showArticleModal(
                 `저자: ${authorName}`,
