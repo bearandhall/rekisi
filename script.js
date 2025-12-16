@@ -1,3 +1,5 @@
+// script.js 파일 전체 내용입니다. (이전 최종 안정화 코드에서 수정된 부분만 강조)
+
 document.addEventListener('DOMContentLoaded', () => {
     const wrapper = document.getElementById('wrapper');
     const connectionLinesSvg = document.getElementById('connection-lines');
@@ -27,10 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let articleNodes = [];
 
     // ---------------------------------------------
-    // 1. 초기 버튼들에 액션 버튼 추가 및 노드 생성 (유지)
+    // 1. 초기 버튼들에 액션 버튼 추가 및 노드 생성
     // ---------------------------------------------
 
     const addActionButton = (node, actionType) => {
+        // ★로고 노드에는 액션 버튼을 추가하지 않음★
+        if (node.dataset.nodeId === 'logo') return; 
+
         const btn = document.createElement('div');
         btn.classList.add('node-action-btn');
         btn.dataset.actionType = actionType; 
@@ -38,10 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
         node.appendChild(btn);
     };
 
+    // 로고 노드에 액션 버튼 추가하지 않음 (startDrag에서 처리)
     addActionButton(introNode, 'intro');
     addActionButton(issue1Node, 'toggle');
 
-
+    // ... (노드 생성 로직 유지) ...
     issue1Articles.forEach((articleId) => {
         const article = articleData[articleId];
         
@@ -104,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let newX = coords.x - offsetX;
         let newY = coords.y - offsetY;
         
-        // 현재 스크롤 위치를 더하여 래퍼 내에서의 절대 위치를 유지
         newX += wrapper.scrollLeft; 
         newY += wrapper.scrollTop;
 
@@ -131,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ---------------------------------------------
-    // 3. SVG 연결선 동적 그리기 (★스크롤 보정 로직 최종 수정★)
+    // 3. SVG 연결선 동적 그리기 (유지)
     // ---------------------------------------------
     
     const getNodeAbsolutePos = (nodeId) => {
@@ -157,12 +162,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (issue1Node.classList.contains('expanded')) {
             issue1Articles.forEach(articleId => {
                 const article = articleData[articleId];
+                // 1호 -> 저자 연결 (Parent)
                 connections.push({ parentId: '1호', childId: article.author, type: 'parent' });
+                // 저자 -> 글 제목 연결 (Straight)
                 connections.push({ parentId: article.author, childId: article.title, type: 'straight' });
             });
         }
         
-        // SVG 영역을 스크롤 영역에 맞게 설정
         connectionLinesSvg.style.width = `${wrapper.scrollWidth}px`;
         connectionLinesSvg.style.height = `${wrapper.offsetHeight}px`; 
 
@@ -174,20 +180,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const childNode = document.querySelector(`[data-node-id="${conn.childId}"]`);
             const childPos = getNodeAbsolutePos(conn.childId);
             
-            if (parentPos && childPos && childNode) {
+            if (parentPos && childPos && childNode && childNode.style.display !== 'none') { // ★노드가 표시될 때만 그림★
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 
-                // 1. 노드의 절대 위치 (wrapper 내)
                 const absStartX = parentPos.x + (conn.parentId === 'logo' ? parentPos.width / 2 : parentPos.width);
                 const absStartY = parentPos.y + (conn.parentId === 'logo' ? parentPos.height : parentPos.height / 2);
                 
                 const absEndX = childPos.x; 
                 const absEndY = childPos.y + childPos.height / 2;
                 
-                // 2. SVG 뷰포트 좌표로 변환 (절대 위치 - 스크롤 값)
-                // 이 subtraction이 스크롤 시 선이 노드를 따라가도록 보정하는 핵심
-                // 'wrapper'의 `overflow: auto`로 스크롤바가 생기면, 이 값은 **양수**이고 노드는 왼쪽으로 이동하므로 선은 오른쪽으로 움직여야 합니다.
-                // 따라서 좌표에서 scrollLeft를 빼는 것이 맞습니다.
                 const svgStartX = absStartX - scrollLeft;
                 const svgStartY = absStartY - scrollTop; 
                 const svgEndX = absEndX - scrollLeft; 
@@ -204,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const midX = svgStartX + distanceX * 0.5;
                     dPath = `M ${svgStartX} ${svgStartY} L ${midX} ${svgStartY} L ${midX} ${svgEndY} L ${svgEndX} ${svgEndY}`;
                 } else {
-                    dPath = `M ${svgStartX} ${startY} C ${svgStartX + 60} ${svgStartY}, ${svgEndX - 60} ${svgEndY}, ${svgEndX} ${svgEndY}`;
+                    dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + 60} ${svgStartY}, ${svgEndX - 60} ${svgEndY}, ${svgEndX} ${svgEndY}`;
                 }
                 
                 path.setAttribute('d', dPath);
@@ -214,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------------
-    // 4. 액션 버튼 클릭 로직 (유지)
+    // 4. 액션 버튼 클릭 로직
     // ---------------------------------------------
     
     wrapper.addEventListener('click', (e) => {
@@ -248,8 +249,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ... (toggleIssueChildren, hideIssueChildren, handleAuthorClick, showArticleModal, closeModal 함수는 유지) ...
-
     const toggleIssueChildren = (togglerNode) => {
         const isExpanded = togglerNode.classList.toggle('expanded');
         
@@ -279,9 +278,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        setTimeout(drawConnections, 50); 
+        // ★노드가 화면에 표시된 후 선을 그리도록 딜레이 추가 (200ms)★
+        setTimeout(drawConnections, 200); 
     };
 
+    // ... (나머지 함수 유지: hideIssueChildren, handleAuthorClick, showArticleModal, closeModal) ...
+    
     const hideIssueChildren = () => {
         issue1Node.classList.remove('expanded');
         articleNodes.forEach(node => {
