@@ -23,8 +23,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const HORIZONTAL_OFFSET = 180; 
     const AUTHOR_TITLE_OFFSET = 150;
     const VERTICAL_SPACING = 50;
+    const INITIAL_LEFT = 50;
 
     let articleNodes = [];
+
+    // ---------------------------------------------
+    // ★수정: 초기 노드 위치 강제 설정 (노드 순서 및 토글 버그 해결)★
+    // ---------------------------------------------
+    
+    // 로고 노드
+    logoNode.style.left = `${INITIAL_LEFT}px`;
+    logoNode.style.top = `50px`; 
+    
+    // 소개 노드
+    introNode.style.left = `${INITIAL_LEFT}px`;
+    introNode.style.top = `130px`; 
+
+    // 1호 노드
+    issue1Node.style.left = `${INITIAL_LEFT}px`;
+    issue1Node.style.top = `200px`; 
 
     // ---------------------------------------------
     // 1. 초기 버튼들에 액션 버튼 추가 및 노드 생성 (유지)
@@ -132,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ---------------------------------------------
-    // 3. SVG 연결선 동적 그리기 (최종 수정)
+    // 3. SVG 연결선 동적 그리기 (유지)
     // ---------------------------------------------
     
     const getNodeClientPos = (nodeId) => {
@@ -156,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // SVG는 fixed position이므로 크기를 뷰포트 크기로 설정
         connectionLinesSvg.style.width = `${window.innerWidth}px`;
         connectionLinesSvg.style.height = `${window.innerHeight}px`; 
 
@@ -192,13 +208,39 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------------
-    // 4. 이벤트 리스너 재활성화 (스크롤 문제 해결)
+    // 4. 액션 버튼 클릭 로직 및 이벤트 리스너 (유지/수정)
     // ---------------------------------------------
     
-    // ★수정: wrapper 스크롤 이벤트에 drawConnections 바인딩★
-    wrapper.addEventListener('scroll', drawConnections); 
-    
-    // ... (나머지 클릭 및 모달 관련 로직 유지) ...
+    wrapper.addEventListener('click', (e) => {
+        const actionBtn = e.target.closest('.node-action-btn');
+        if (!actionBtn) return;
+        
+        const actionType = actionBtn.dataset.actionType;
+        const parentNode = actionBtn.closest('.draggable-node');
+        const articleId = parentNode.dataset.articleId;
+        const nodeId = parentNode.dataset.nodeId;
+        
+        e.stopPropagation(); 
+
+        switch (actionType) {
+            case 'toggle':
+                toggleIssueChildren(parentNode);
+                break;
+            case 'intro':
+                const introArticle = articleData['intro_rekisi'];
+                showArticleModal(introArticle.title, 'REKISI 편집부', null, introArticle.content, 'article');
+                break;
+            case 'article-modal':
+                const article = articleData[articleId];
+                showArticleModal(article.title, article.author, article.author_intro, article.content, 'article');
+                break;
+            case 'author-modal':
+                handleAuthorClick(nodeId);
+                break;
+            default:
+                break;
+        }
+    });
 
     const toggleIssueChildren = (togglerNode) => {
         const isExpanded = togglerNode.classList.toggle('expanded');
@@ -232,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(drawConnections, 200); 
     };
 
-    // ... (나머지 함수 유지: hideIssueChildren, handleAuthorClick, showArticleModal, closeModal) ...
     
     const hideIssueChildren = () => {
         issue1Node.classList.remove('expanded');
@@ -295,7 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('resize', drawConnections);
-    setTimeout(drawConnections, 10);
+    // ★수정: 스크롤 이벤트 재활성화로 선 위치 실시간 조정★
+    wrapper.addEventListener('scroll', drawConnections); 
     
-    // 이벤트 리스너는 위에 'scroll' 이벤트에 다시 바인딩되었습니다.
+    setTimeout(drawConnections, 10);
 });
