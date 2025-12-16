@@ -72,8 +72,8 @@ body {
     height: auto;
     text-indent: 0; 
     
-    /* ★최종 로고 크기 조정: scale(0.3)로 70% 축소★ */
-    transform: scale(0.3); 
+    /* ★최종 로고 크기 조정: scale(0.24) 적용 (0.3 * 0.8 = 0.24)★ */
+    transform: scale(0.24); 
     transform-origin: top left; 
 }
 #intro-node, #issue-1-node {
