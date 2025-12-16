@@ -3,50 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REKISI WEBZINE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>REKISI 노드맵</title>
     <link rel="stylesheet" href="style.css">
-</head>
+    
+    <script src="article.js"></script> 
+    
+    </head>
 <body>
+
     <div id="wrapper">
-        
         <svg id="connection-lines"></svg>
+        
+        <div id="logo-node" class="draggable-node" data-node-id="logo">REKISI</div>
+        <div id="intro-node" class="draggable-node" data-node-id="소개">소개</div>
+        <div id="issue-1-node" class="draggable-node" data-node-id="1호">1호</div>
 
-        <div id="main-menu-container">
-
-            <div id="logo-node" class="draggable-node" data-node-id="logo" style="left: 20px; top: 20px;">
-                <img id="logo" style="left: 20px; top: 20px;" src="rekisi_logo.png" alt="REKISI Logo">
+        <div id="issue-1-children-container">
             </div>
-
-            <div id="intro-node" class="draggable-node toggler menu-button" data-node-id="소개" data-article-id="intro_rekisi" style="left: 100px; top: 150px;">
-                소개
-            </div>
-
-            <div id="issue-1-node" class="draggable-node toggler menu-button" data-node-id="1호" style="left: 100px; top: 250px;">
-                1호
-            </div>
-
-            <div id="issue-1-children-container">
-                </div>
-            
-        </div>
 
     </div>
-    
+
     <div id="article-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn">&times;</span>
-            <div id="article-display">
-                <h1 id="modal-article-title"></h1>
-                <p id="modal-article-meta"></p>
-                <div id="modal-author-intro"></div> <div id="modal-article-body"></div>
-            </div>
+            <h2 id="modal-article-title"></h2>
+            <p id="modal-article-meta"></p>
+            <div id="modal-author-intro"></div>
+            <div id="modal-article-body"></div>
         </div>
     </div>
 
-    <script src="articles.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
-
-
