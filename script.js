@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const introNode = document.getElementById('intro-node');
     const issue1Node = document.getElementById('issue-1-node');
     
-    // 모달 관련 요소 (생략)
+    // 모달 관련 요소 (유지)
     const modal = document.getElementById('article-modal');
     const closeBtn = document.querySelector('.close-btn');
     const modalTitle = document.getElementById('modal-article-title');
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // ---------------------------------------------
-    // 2. Drag & Drop 로직 (★클릭/드래그 분리 강화★)
+    // 2. Drag & Drop 로직 (유지)
     // ---------------------------------------------
     
     const getClientCoords = (e) => {
@@ -69,12 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetNode = e.target.closest('.draggable-node');
         if (!targetNode) return;
         
-        // 터치 시작 시에만 preventDefault()를 적용하여 모바일 스크롤 방지
         if (e.type === 'touchstart') {
             e.preventDefault(); 
-        } else if (e.type === 'mousedown') {
-            // 데스크탑에서는 mousedown 시 기본 preventDefault()를 제거하여 
-            // 드래그가 아닌 일반 클릭 시 마우스 고착 현상 방지
         }
 
         draggedElement = targetNode;
@@ -103,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (isDragging) {
-            // 드래그 중에는 기본 이벤트 방지 (텍스트 선택, 스크롤링 방지)
             e.preventDefault(); 
             
             let newX = coords.x - offsetX;
@@ -123,9 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (draggedElement) {
             draggedElement.style.zIndex = 30;
             
-            // isDragging이 참이면 드래그 동작이 완료된 것으로 보고 클릭 무시
             if (!isDragging) {
-                // isDragging이 거짓이면 짧은 클릭으로 간주하고 클릭 로직 실행
                 handleNodeClick(draggedElement);
             }
         }
@@ -133,35 +126,29 @@ document.addEventListener('DOMContentLoaded', () => {
         isDragging = false;
     };
     
-    // 마우스 이벤트 리스너
     wrapper.addEventListener('mousedown', startDrag);
     wrapper.addEventListener('mousemove', drag);
     wrapper.addEventListener('mouseup', endDrag);
 
-    // 터치 이벤트 리스너 (모바일 지원)
     wrapper.addEventListener('touchstart', startDrag);
     wrapper.addEventListener('touchmove', drag);
     wrapper.addEventListener('touchend', endDrag);
 
 
     // ---------------------------------------------
-    // 3. SVG 연결선 동적 그리기 (유지)
+    // 3. SVG 연결선 동적 그리기 (★스크롤 좌표 계산 재정비 핵심 수정★)
     // ---------------------------------------------
     
-    const getNodeBoundingBox = (nodeId) => {
+    const getNodeAbsolutePos = (nodeId) => {
         const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
         if (!nodeElement) return null;
 
-        const rect = nodeElement.getBoundingClientRect(); 
-
-        const absX = rect.left + wrapper.scrollLeft;
-        const absY = rect.top + wrapper.scrollTop;
-        
+        // wrapper 내에서의 절대 위치 (offset)
         return { 
-            absX: absX, 
-            absY: absY, 
-            width: rect.width, 
-            height: rect.height,
+            x: nodeElement.offsetLeft, 
+            y: nodeElement.offsetTop, 
+            width: nodeElement.offsetWidth, 
+            height: nodeElement.offsetHeight,
         }; 
     };
 
@@ -181,40 +168,47 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        const svgWidth = wrapper.scrollWidth;
-        const svgHeight = wrapper.offsetHeight; 
-        connectionLinesSvg.style.width = `${svgWidth}px`;
-        connectionLinesSvg.style.height = `${svgHeight}px`;
+        // SVG 영역을 충분히 넓게 설정 (스크롤 영역 커버)
+        connectionLinesSvg.style.width = `${wrapper.scrollWidth}px`;
+        connectionLinesSvg.style.height = `${wrapper.offsetHeight}px`; // 높이는 뷰포트 고정
+
+        const scrollLeft = wrapper.scrollLeft;
+        const scrollTop = wrapper.scrollTop; // 현재는 0
 
         connections.forEach(conn => {
-            const parentBox = getNodeBoundingBox(conn.parentId);
+            const parentPos = getNodeAbsolutePos(conn.parentId);
             const childNode = document.querySelector(`[data-node-id="${conn.childId}"]`);
-            const childBox = getNodeBoundingBox(conn.childId);
+            const childPos = getNodeAbsolutePos(conn.childId);
             
-            if (parentBox && childBox && childNode) {
+            if (parentPos && childPos && childNode) {
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 
-                const scrollLeft = wrapper.scrollLeft;
-                const scrollTop = wrapper.scrollTop; 
-
-                const startX = parentBox.absX + (conn.parentId === 'logo' ? parentBox.width / 2 : parentBox.width) - scrollLeft;
-                const startY = parentBox.absY + (conn.parentId === 'logo' ? parentBox.height : parentBox.height / 2) - scrollTop;
+                // 1. 노드의 절대 위치 (wrapper 내) 계산
+                const absStartX = parentPos.x + (conn.parentId === 'logo' ? parentPos.width / 2 : parentPos.width);
+                const absStartY = parentPos.y + (conn.parentId === 'logo' ? parentPos.height : parentPos.height / 2);
                 
-                const endX = childBox.absX - scrollLeft; 
-                const endY = childBox.absY + childBox.height / 2 - scrollTop;
+                const absEndX = childPos.x; 
+                const absEndY = childPos.y + childPos.height / 2;
                 
-                const distanceX = endX - startX;
-                const distanceY = endY - startY;
+                // 2. SVG 뷰포트 좌표로 변환 (절대 위치 - 스크롤 값)
+                // 이 subtraction이 스크롤 시 선이 노드를 따라가도록 보정하는 핵심입니다.
+                const svgStartX = absStartX - scrollLeft;
+                const svgStartY = absStartY - scrollTop; 
+                const svgEndX = absEndX - scrollLeft; 
+                const svgEndY = absEndY - scrollTop;
+                
+                const distanceX = svgEndX - svgStartX;
+                const distanceY = svgEndY - svgStartY;
 
                 let dPath;
 
                 if (conn.type === 'logo') {
-                    dPath = `M ${startX} ${startY} C ${startX + 30} ${startY + 30}, ${endX - 30} ${endY}, ${endX} ${endY}`;
+                    dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + 30} ${svgStartY + 30}, ${svgEndX - 30} ${svgEndY}, ${svgEndX} ${svgEndY}`;
                 } else if (conn.type === 'straight') {
-                    const midX = startX + distanceX * 0.5;
-                    dPath = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`;
+                    const midX = svgStartX + distanceX * 0.5;
+                    dPath = `M ${svgStartX} ${svgStartY} L ${midX} ${svgStartY} L ${midX} ${svgEndY} L ${svgEndX} ${svgEndY}`;
                 } else {
-                    dPath = `M ${startX} ${startY} C ${startX + 60} ${startY}, ${endX - 60} ${endY}, ${endX} ${endY}`;
+                    dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + 60} ${startY}, ${svgEndX - 60} ${svgEndY}, ${svgEndX} ${svgEndY}`;
                 }
                 
                 path.setAttribute('d', dPath);
@@ -228,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---------------------------------------------
     
     const handleNodeClick = (node) => {
-        // console.log(`Clicked node: ${node.dataset.nodeId}`); // 디버깅용 로그
         if (node.dataset.nodeId === 'logo') {
             hideIssueChildren();
             closeModal();
