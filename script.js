@@ -28,12 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const AUTHOR_TITLE_OFFSET = 150;
     const VERTICAL_SPACING = 50;
 
-    let articleNodes = []; // [저자노드, 제목노드, 저자노드, 제목노드, ...] 순서
+    let articleNodes = [];
 
     // ---------------------------------------------
-    // 1. 글 목록 노드 생성 (위치 지정 없이 DOM에만 추가)
+    // 1. 글 목록 노드 생성 (유지)
     // ---------------------------------------------
-    issue1Articles.forEach((articleId, index) => {
+    issue1Articles.forEach((articleId) => {
         const article = articleData[articleId];
         
         // 저자 노드
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // ---------------------------------------------
-    // 2. Drag & Drop 로직 (유지)
+    // 2. Drag & Drop 로직 (★터치 클릭 처리 로직 개선★)
     // ---------------------------------------------
     
     const getClientCoords = (e) => {
@@ -115,7 +115,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (draggedElement) {
             draggedElement.style.zIndex = 30;
             
-            if (!isDragging) {
+            // ★개선된 터치/클릭 판단 로직★
+            // 1. 드래그로 판정된 적이 없거나 (isDragging === false)
+            // 2. 마우스 클릭 시작점과 끝점의 거리가 임계값 이내일 경우 (터치 튕김 방지)
+            const coords = getClientCoords(e);
+            const deltaX = Math.abs(coords.x - clickStartX);
+            const deltaY = Math.abs(coords.y - clickStartY);
+
+            if (!isDragging || (deltaX <= DRAG_THRESHOLD && deltaY <= DRAG_THRESHOLD)) {
                 handleNodeClick(draggedElement);
             }
         }
@@ -127,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     wrapper.addEventListener('mousemove', drag);
     wrapper.addEventListener('mouseup', endDrag);
 
+    // 터치 이벤트 리스너 (모바일 지원)
     wrapper.addEventListener('touchstart', startDrag);
     wrapper.addEventListener('touchmove', drag);
     wrapper.addEventListener('touchend', endDrag);
@@ -174,15 +182,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const scrollLeft = wrapper.scrollLeft;
                 const scrollTop = wrapper.scrollTop;
 
-                // 시작점: 부모 노드 좌표 (offset)
                 const startX = parentPos.x + (conn.parentId === 'logo' ? parentPos.width / 2 : parentPos.width);
                 const startY = parentPos.y + (conn.parentId === 'logo' ? parentPos.height : parentPos.height / 2);
                 
-                // 끝점: 자식 노드 좌표 (offset)
-                const endX = childPos.x; // 왼쪽 끝
+                const endX = childPos.x; 
                 const endY = childPos.y + childPos.height / 2;
 
-                // SVG 뷰포트 좌표 (절대 좌표 - 스크롤 위치)
                 const svgStartX = startX - scrollLeft;
                 const svgStartY = startY - scrollTop;
                 const svgEndX = endX - scrollLeft;
@@ -209,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------------
-    // 4. 클릭 이벤트 및 모달 처리 로직 (★토글 시 위치 재계산 핵심 수정★)
+    // 4. 클릭 이벤트 및 모달 처리 로직 (유지)
     // ---------------------------------------------
     
     const handleNodeClick = (node) => {
@@ -250,7 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const isExpanded = togglerNode.classList.toggle('expanded');
         
         if (isExpanded) {
-            // ★"1호" 버튼의 현재 위치를 기준으로 글 목록 위치를 동적으로 설정★
             const parentX = togglerNode.offsetLeft;
             const parentY = togglerNode.offsetTop;
             
@@ -258,12 +262,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const articleIndex = Math.floor(index / 2);
                 const isAuthorNode = index % 2 === 0;
                 
-                // 저자 노드 위치
                 let newX = parentX + HORIZONTAL_OFFSET;
                 let newY = parentY + (articleIndex * VERTICAL_SPACING);
 
                 if (!isAuthorNode) {
-                    // 제목 노드 위치
                     newX += AUTHOR_TITLE_OFFSET;
                 }
                 
@@ -273,13 +275,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
         } else {
-            // 닫을 때는 숨김
             articleNodes.forEach(node => {
                 node.style.display = 'none';
             });
         }
 
-        // DOM 업데이트 후 선 다시 그리기
         setTimeout(drawConnections, 50); 
     };
 
@@ -289,8 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
             node.style.display = 'none';
         });
     };
-
-    // ... (handleAuthorClick, showArticleModal, closeModal 함수는 이전과 동일하게 유지)
     
     const handleAuthorClick = (authorName) => {
         const article = issue1Articles.map(id => articleData[id]).find(a => a.author === authorName);
@@ -345,7 +343,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.key === 'Escape') { closeModal(); }
     });
 
-    // 초기 선 그리기
     window.addEventListener('resize', drawConnections);
     setTimeout(drawConnections, 10);
 });
