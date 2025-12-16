@@ -27,20 +27,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let articleNodes = [];
 
     // ---------------------------------------------
-    // ★최종 수정: 초기 노드 배치 구조 변경★
+    // ★최종 수정: 초기 노드 배치 간격 조정★
     // ---------------------------------------------
     
     // 로고 노드
     logoNode.style.left = `${INITIAL_LEFT}px`;
     logoNode.style.top = `50px`; 
     
-    // 소개 노드 (로고 오른쪽)
-    introNode.style.left = `${INITIAL_LEFT + 150}px`;
+    // 소개 노드 (로고 오른쪽 + 더 넓은 간격: 150px -> 250px)
+    introNode.style.left = `${INITIAL_LEFT + 250}px`; 
     introNode.style.top = `50px`; 
 
-    // 1호 노드 (로고 아래쪽)
+    // 1호 노드 (로고 아래쪽 + 더 넓은 간격: 150px -> 200px)
     issue1Node.style.left = `${INITIAL_LEFT}px`;
-    issue1Node.style.top = `150px`; 
+    issue1Node.style.top = `200px`; 
 
     // ---------------------------------------------
     // 1. 초기 버튼들에 액션 버튼 추가 및 노드 생성 (유지)
