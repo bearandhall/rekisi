@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>REKISI WEBZINE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Source+Code+Pro:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,26 +12,25 @@
         
         <svg id="connection-lines"></svg>
 
-        <div id="sidebar">
-            <div id="logo-container">
-                <img id="logo" data-node-id="logo" src="rekisi_logo.png" alt="REKISI Logo">
+        <div id="main-menu-container">
+
+            <div id="logo-node" class="draggable-node" data-node-id="logo" style="left: 50px; top: 50px;">
+                <img id="logo" src="rekisi_logo.png" alt="REKISI Logo">
             </div>
 
-            <div id="intro-section" class="menu-section">
-                <div class="node parent toggler" data-node-id="소개" data-article-id="intro_rekisi">소개</div>
-                <div class="menu-children intro-children">
-                    </div>
+            <div id="intro-node" class="draggable-node toggler menu-button" data-node-id="소개" data-article-id="intro_rekisi" style="left: 100px; top: 150px;">
+                소개
             </div>
 
-            <div id="issue-1-section" class="menu-section">
-                <div class="node parent toggler" data-node-id="1호">1호</div>
-                <div class="menu-children articles-list">
-                    </div>
+            <div id="issue-1-node" class="draggable-node toggler menu-button" data-node-id="1호" style="left: 100px; top: 250px;">
+                1호
             </div>
+
+            <div id="issue-1-children-container">
+                </div>
             
         </div>
 
-        <div id="content-area" style="display: none;"></div>
     </div>
     
     <div id="article-modal" class="modal">
@@ -40,7 +39,7 @@
             <div id="article-display">
                 <h1 id="modal-article-title"></h1>
                 <p id="modal-article-meta"></p>
-                <div id="modal-article-body"></div>
+                <div id="modal-author-intro"></div> <div id="modal-article-body"></div>
             </div>
         </div>
     </div>
