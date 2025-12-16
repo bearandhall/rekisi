@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const introNode = document.getElementById('intro-node');
     const issue1Node = document.getElementById('issue-1-node');
     
-    // 모달 관련 요소 (유지)
     const modal = document.getElementById('article-modal');
     const closeBtn = document.querySelector('.close-btn');
     const modalTitle = document.getElementById('modal-article-title');
@@ -28,20 +27,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let articleNodes = [];
 
     // ---------------------------------------------
-    // ★수정: 초기 노드 위치 강제 설정 (노드 순서 및 토글 버그 해결)★
+    // ★최종 수정: 초기 노드 배치 구조 변경★
     // ---------------------------------------------
     
     // 로고 노드
     logoNode.style.left = `${INITIAL_LEFT}px`;
     logoNode.style.top = `50px`; 
     
-    // 소개 노드
-    introNode.style.left = `${INITIAL_LEFT}px`;
-    introNode.style.top = `130px`; 
+    // 소개 노드 (로고 오른쪽)
+    introNode.style.left = `${INITIAL_LEFT + 150}px`;
+    introNode.style.top = `50px`; 
 
-    // 1호 노드
+    // 1호 노드 (로고 아래쪽)
     issue1Node.style.left = `${INITIAL_LEFT}px`;
-    issue1Node.style.top = `200px`; 
+    issue1Node.style.top = `150px`; 
 
     // ---------------------------------------------
     // 1. 초기 버튼들에 액션 버튼 추가 및 노드 생성 (유지)
@@ -208,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------------
-    // 4. 액션 버튼 클릭 로직 및 이벤트 리스너 (유지/수정)
+    // 4. 액션 버튼 클릭 로직 및 이벤트 리스너 (유지)
     // ---------------------------------------------
     
     wrapper.addEventListener('click', (e) => {
@@ -336,7 +335,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('resize', drawConnections);
-    // ★수정: 스크롤 이벤트 재활성화로 선 위치 실시간 조정★
     wrapper.addEventListener('scroll', drawConnections); 
     
     setTimeout(drawConnections, 10);
