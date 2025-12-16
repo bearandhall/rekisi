@@ -56,15 +56,14 @@ body {
     cursor: grabbing;
 }
 
-/* 특정 노드 스타일 */
 #logo-node {
-    /* ★수정: 폰트 크기 1.0em로 극단적 축소 및 padding 제거★ */
+    /* ★최종 수정: 폰트 크기를 더 작게, 그리고 패딩과 보더 제거★ */
     font-size: 1.0em; 
     font-weight: 900;
     border: none;
     box-shadow: none;
     background: none;
-    padding: 0; /* padding 제거 */
+    padding: 0; /* 패딩 완전히 제거 */
     min-width: 0;
     width: fit-content; 
     height: auto;
@@ -187,3 +186,4 @@ body {
     margin-bottom: 1em;
     text-align: justify;
 }
+
