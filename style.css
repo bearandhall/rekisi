@@ -72,7 +72,7 @@ body {
     height: auto;
     text-indent: 0; 
     
-    /* ★최종 로고 크기 조정: scale(0.24) 적용 (0.3 * 0.8 = 0.24)★ */
+    /* 로고 크기: scale(0.24) 적용 */
     transform: scale(0.24); 
     transform-origin: top left; 
 }
@@ -89,7 +89,7 @@ body {
     font-size: 0.8em; 
 }
 
-/* 액션 버튼 스타일 (유지) */
+/* 액션 버튼 스타일 */
 .node-action-btn {
     position: absolute;
     bottom: -10px; 
@@ -192,4 +192,12 @@ body {
     line-height: 1.6;
     margin-bottom: 1em;
     text-align: justify;
+}
+
+/* 모바일 뷰포트 보정 스타일 (600px 이하) - 상/하단 여백 추가 */
+@media screen and (max-width: 600px) {
+    #wrapper {
+        /* 하단 스크롤 여유 공간 확보 */
+        padding-bottom: 200px; 
+    }
 }
