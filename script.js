@@ -31,13 +31,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---------------------------------------------
     
     const isMobileView = () => window.innerWidth <= 600;
-    const MOBILE_TOP_OFFSET = 150; // 모바일에서 상단에서 띄울 Y축 오프셋
+    const MOBILE_TOP_OFFSET = 150; 
     
-    const logoY = isMobileView() ? MOBILE_TOP_OFFSET : 50;
+    // 로고 Y 위치 설정
+    const logoY = isMobileView() ? MOBILE_TOP_OFFSET : 50; 
     
     // 소개 노드의 X/Y 위치 설정
-    const introY = isMobileView() ? MOBILE_TOP_OFFSET : 50;
-    const introX = isMobileView() ? INITIAL_LEFT + 150 : INITIAL_LEFT + 250; 
+    const introY = isMobileView() ? MOBILE_TOP_OFFSET + 30 : 50; 
+    const introX = isMobileView() ? INITIAL_LEFT + 200 : INITIAL_LEFT + 250; 
 
     // 1호 노드의 X/Y 위치 설정
     const issue1Y = isMobileView() ? MOBILE_TOP_OFFSET + 100 : 200;
@@ -107,13 +108,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return { x: e.clientX, y: e.clientY };
     };
-
+    
     const startDrag = (e) => {
         const targetNode = e.target.closest('.draggable-node');
+        const isActionButton = e.target.closest('.node-action-btn');
         
-        // 버튼 클릭 시 드래그 시작 막고 preventDefault() 호출
-        if (e.target.closest('.node-action-btn')) {
-            e.preventDefault(); 
+        // ★수정: 액션 버튼 클릭 시 e.preventDefault() 호출 제거하여 모바일 터치(click) 허용
+        if (isActionButton) {
             return;
         }
 
@@ -129,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         draggedElement.style.zIndex = 40; 
 
-        // 드래그 시작 시 기본 동작(스크롤) 차단
+        // ★수정: 노드를 잡았을 때만 preventDefault()를 호출하여 모바일 터치 튕김 현상 방지
         e.preventDefault(); 
     };
 
@@ -148,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
         draggedElement.style.left = `${newX}px`;
         draggedElement.style.top = `${newY}px`;
         
-        // 드래그 중 선 연결 업데이트
         drawConnections(); 
     };
 
@@ -170,10 +170,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ---------------------------------------------
-    // 3. SVG 연결선 동적 그리기 (스크롤 시 재계산)
+    // 3. SVG 연결선 동적 그리기 
     // ---------------------------------------------
     
-    // ★수정 1: 노드의 wrapper 기준 절대 좌표와 크기를 반환하는 함수 (getBoundingClientRect 제거)
+    // 노드의 wrapper 기준 절대 좌표와 크기를 반환하는 함수
     const getNodeWrapperPos = (nodeId) => {
         const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
         if (!nodeElement) return null;
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rafHandle = requestAnimationFrame(() => {
             connectionLinesSvg.innerHTML = '';
             
-            // ★수정 2: SVG 크기를 wrapper의 전체 스크롤 영역 크기로 설정
+            // SVG 크기를 wrapper의 전체 스크롤 영역 크기로 설정 (Absolute 좌표계 통일)
             connectionLinesSvg.style.width = `${wrapper.scrollWidth}px`;
             connectionLinesSvg.style.height = `${wrapper.scrollHeight}px`; 
 
@@ -216,7 +216,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             connections.forEach(conn => {
-                // ★수정 3: wrapper 기준 좌표 사용 (getNodeWrapperPos)
                 const parentRect = getNodeWrapperPos(conn.parentId);
                 const childElement = document.querySelector(`[data-node-id="${conn.childId}"]`);
                 const childRect = getNodeWrapperPos(conn.childId);
@@ -225,16 +224,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     
                     // SVG는 이제 wrapper 기준이므로, 노드의 absolute top/left를 그대로 사용합니다.
+                    // 시작점: 로고의 경우 중앙, 다른 노드는 오른쪽 끝
                     const svgStartX = parentRect.left + (conn.parentId === 'logo' ? (parentRect.width * 0.5) : parentRect.width);
                     const svgStartY = parentRect.top + (conn.parentId === 'logo' ? parentRect.height : parentRect.height / 2);
                     
+                    // 끝점: 왼쪽 가운데
                     const svgEndX = childRect.left; 
                     const svgEndY = childRect.top + childRect.height / 2;
                     
                     let dPath;
 
                     if (conn.type === 'logo') {
-                        dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + 30} ${svgStartY + 30}, ${svgEndX - 30} ${svgEndY}, ${svgEndX} ${svgEndY}`;
+                        // 로고 연결선 수정 - 부드러운 곡선을 위해 제어점 조정
+                        const controlX1 = svgStartX + 50; 
+                        const controlY1 = svgStartY;
+                        const controlX2 = svgEndX - 50;
+                        const controlY2 = svgEndY;
+                        dPath = `M ${svgStartX} ${svgStartY} C ${controlX1} ${controlY1}, ${controlX2} ${controlY2}, ${svgEndX} ${svgEndY}`;
                     } else if (conn.type === 'straight' || conn.type === 'parent') {
                         // 부드러운 곡선
                         const offset = 80; 
@@ -378,7 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('resize', drawConnections);
-    // 스크롤 이벤트 발생 시 requestAnimationFrame으로 래핑하여 호출 
     wrapper.addEventListener('scroll', drawConnections); 
     
     setTimeout(drawConnections, 10);
