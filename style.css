@@ -3,7 +3,8 @@ body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    overflow: hidden; /* 전체 화면에서 스크롤바 방지 */
+    /* 세로 스크롤은 숨김 */
+    overflow-y: hidden; 
     font-family: 'Noto Sans KR', sans-serif;
     color: #333;
     background-color: #f8f8f8;
@@ -13,7 +14,9 @@ body, html {
     position: relative;
     width: 100vw;
     height: 100vh;
-    overflow: hidden;
+    /* ★모바일 가로 스크롤 허용 (문제 3 해결)★ */
+    overflow-x: auto; 
+    overflow-y: hidden;
     z-index: 10;
 }
 
@@ -22,9 +25,10 @@ body, html {
     position: absolute; 
     top: 0;
     left: 0;
-    width: 100%;
+    /* SVG 너비를 임의로 3000px로 설정하여 스크롤 환경에 대비 */
+    width: 3000px; 
     height: 100%;
-    pointer-events: none; /* 선이 마우스 이벤트를 가로막지 않도록 */
+    pointer-events: none; 
     z-index: 15; 
 }
 
@@ -37,15 +41,16 @@ body, html {
 
 /* ★드래그 가능한 노드 기본 스타일★ */
 .draggable-node {
-    position: absolute; /* 절대 위치 지정 (자유 이동의 핵심) */
-    cursor: grab; /* 마우스 커서를 잡는 모양으로 변경 */
+    position: absolute; 
+    cursor: grab; 
     user-select: none;
     z-index: 30;
     background-color: #fdfdfd; 
     padding: 8px 15px;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+    white-space: nowrap; 
+    touch-action: none; /* 모바일에서 기본 터치 액션 방지 */
 }
 .draggable-node:active {
     cursor: grabbing;
@@ -56,12 +61,12 @@ body, html {
 
 /* 로고 스타일 */
 #logo-node {
-    padding: 0; /* 이미지 노드는 패딩 제거 */
+    padding: 0; 
     box-shadow: none;
     background: none;
 }
 #logo-node img {
-    width: 100px; /* 로고 이미지 크기 조정 */
+    width: 100px; 
     height: auto;
     display: block;
 }
@@ -73,11 +78,16 @@ body, html {
 .node-title, .node-author {
     padding: 5px 10px;
 }
+.node-author {
+    cursor: pointer; /* 저자 클릭 가능 표시 */
+}
 .node-title:hover, .node-author:hover, .menu-button:hover {
     background-color: #eee;
 }
 
 /* ★모달 스타일 (유지)★ */
+/* ... (모달 스타일은 이전과 동일하게 유지됩니다.) */
+
 .modal {
     display: none; 
     position: fixed;
