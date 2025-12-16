@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let offsetX, offsetY;
     let isDragging = false;
     let clickStartX, clickStartY;
-    let clickTimer = null; // 클릭 지연을 위한 타이머
     const DRAG_THRESHOLD = 5; 
 
     const articleData = window.articleData || {};
@@ -56,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // ---------------------------------------------
-    // 2. Drag & Drop 로직 (★클릭/터치 안정화 핵심 수정★)
+    // 2. Drag & Drop 로직 (★클릭/드래그 분리 강화★)
     // ---------------------------------------------
     
     const getClientCoords = (e) => {
@@ -70,10 +69,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetNode = e.target.closest('.draggable-node');
         if (!targetNode) return;
         
-        // 터치 시작 시 기본 스크롤/줌 동작 방지
-        if (e.type === 'touchstart' || e.type === 'mousedown') {
-             // 브라우저 기본 동작 방지 (특히 모바일 탭 시 튕김 방지)
+        // 터치 시작 시에만 preventDefault()를 적용하여 모바일 스크롤 방지
+        if (e.type === 'touchstart') {
             e.preventDefault(); 
+        } else if (e.type === 'mousedown') {
+            // 데스크탑에서는 mousedown 시 기본 preventDefault()를 제거하여 
+            // 드래그가 아닌 일반 클릭 시 마우스 고착 현상 방지
         }
 
         draggedElement = targetNode;
@@ -93,9 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const drag = (e) => {
         if (!draggedElement) return;
 
-        // 드래그 중에는 기본 이벤트 방지 (스크롤/텍스트 선택 방지)
-        e.preventDefault(); 
-
         const coords = getClientCoords(e);
         const deltaX = Math.abs(coords.x - clickStartX);
         const deltaY = Math.abs(coords.y - clickStartY);
@@ -105,6 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (isDragging) {
+            // 드래그 중에는 기본 이벤트 방지 (텍스트 선택, 스크롤링 방지)
+            e.preventDefault(); 
+            
             let newX = coords.x - offsetX;
             let newY = coords.y - offsetY;
             
@@ -122,9 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (draggedElement) {
             draggedElement.style.zIndex = 30;
             
-            // ★ 클릭/탭 처리 로직 (이동이 없었을 경우 클릭으로 처리)
+            // isDragging이 참이면 드래그 동작이 완료된 것으로 보고 클릭 무시
             if (!isDragging) {
-                // 클릭 이벤트를 지연 없이 바로 처리
+                // isDragging이 거짓이면 짧은 클릭으로 간주하고 클릭 로직 실행
                 handleNodeClick(draggedElement);
             }
         }
@@ -196,7 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const scrollLeft = wrapper.scrollLeft;
                 const scrollTop = wrapper.scrollTop; 
 
-                // SVG 뷰포트 좌표 (절대 좌표 - 스크롤 위치)
                 const startX = parentBox.absX + (conn.parentId === 'logo' ? parentBox.width / 2 : parentBox.width) - scrollLeft;
                 const startY = parentBox.absY + (conn.parentId === 'logo' ? parentBox.height : parentBox.height / 2) - scrollTop;
                 
@@ -228,6 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---------------------------------------------
     
     const handleNodeClick = (node) => {
+        // console.log(`Clicked node: ${node.dataset.nodeId}`); // 디버깅용 로그
         if (node.dataset.nodeId === 'logo') {
             hideIssueChildren();
             closeModal();
