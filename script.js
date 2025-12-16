@@ -16,9 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let draggedElement = null;
     let offsetX, offsetY;
-    let isDragging = false;
-    let clickStartX, clickStartY;
-    const DRAG_THRESHOLD = 5; 
 
     const articleData = window.articleData || {};
     const issue1Articles = Object.keys(articleData).filter(id => id !== 'intro_rekisi');
@@ -30,32 +27,50 @@ document.addEventListener('DOMContentLoaded', () => {
     let articleNodes = [];
 
     // ---------------------------------------------
-    // 1. 글 목록 노드 생성 (유지)
+    // 1. 글 목록 노드 생성 및 UI 분리 (★체크박스 UI 추가★)
     // ---------------------------------------------
+
+    // 초기 버튼들에 액션 버튼 추가
+    const addActionButton = (node, actionType) => {
+        const btn = document.createElement('div');
+        btn.classList.add('node-action-btn');
+        btn.dataset.actionType = actionType; // 'toggle', 'modal', 'intro'
+        btn.innerHTML = actionType === 'toggle' ? '목록' : '&#x25A1;'; // ㅁ 기호
+        node.appendChild(btn);
+    };
+
+    addActionButton(introNode, 'intro');
+    addActionButton(issue1Node, 'toggle');
+
+
     issue1Articles.forEach((articleId) => {
         const article = articleData[articleId];
         
+        // 저자 노드
         const authorNode = document.createElement('div');
         authorNode.classList.add('draggable-node', 'node-author');
         authorNode.dataset.nodeId = article.author;
         authorNode.dataset.authorInfo = article.author; 
         authorNode.textContent = article.author;
+        addActionButton(authorNode, 'author-modal'); // 저자 모달 버튼
         authorNode.style.display = 'none'; 
         issue1ChildrenContainer.appendChild(authorNode);
         articleNodes.push(authorNode);
         
+        // 제목 노드 (개별 글)
         const titleNode = document.createElement('div');
         titleNode.classList.add('draggable-node', 'node-title', 'article-link');
         titleNode.dataset.nodeId = article.title; 
         titleNode.dataset.articleId = articleId; 
         titleNode.textContent = article.title;
+        addActionButton(titleNode, 'article-modal'); // 글 모달 버튼
         titleNode.style.display = 'none'; 
         issue1ChildrenContainer.appendChild(titleNode);
         articleNodes.push(titleNode);
     });
     
     // ---------------------------------------------
-    // 2. Drag & Drop 로직 (유지)
+    // 2. Drag & Drop 로직 (★클릭 처리 로직 완전 제거, 드래그만 담당★)
     // ---------------------------------------------
     
     const getClientCoords = (e) => {
@@ -67,63 +82,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const startDrag = (e) => {
         const targetNode = e.target.closest('.draggable-node');
-        if (!targetNode) return;
+        if (!targetNode || e.target.closest('.node-action-btn')) return; // ★액션 버튼 클릭 시 드래그 무시★
         
-        if (e.type === 'touchstart') {
-            e.preventDefault(); 
-        }
-
         draggedElement = targetNode;
-        isDragging = false;
         
         const coords = getClientCoords(e);
-        clickStartX = coords.x;
-        clickStartY = coords.y;
-        
         const rect = targetNode.getBoundingClientRect();
         offsetX = coords.x - rect.left;
         offsetY = coords.y - rect.top;
         
         draggedElement.style.zIndex = 40; 
+
+        // 터치 환경에서 드래그 시작 시 스크롤/줌 방지
+        if (e.type === 'touchstart') {
+            e.preventDefault(); 
+        }
     };
 
     const drag = (e) => {
         if (!draggedElement) return;
 
+        e.preventDefault(); // 드래그 중 텍스트 선택 및 스크롤 방지
+            
         const coords = getClientCoords(e);
-        const deltaX = Math.abs(coords.x - clickStartX);
-        const deltaY = Math.abs(coords.y - clickStartY);
+        let newX = coords.x - offsetX;
+        let newY = coords.y - offsetY;
+        
+        newX += wrapper.scrollLeft; 
+        newY += wrapper.scrollTop;
 
-        if (deltaX > DRAG_THRESHOLD || deltaY > DRAG_THRESHOLD) {
-            isDragging = true;
-        }
-
-        if (isDragging) {
-            e.preventDefault(); 
-            
-            let newX = coords.x - offsetX;
-            let newY = coords.y - offsetY;
-            
-            newX += wrapper.scrollLeft; 
-            newY += wrapper.scrollTop;
-
-            draggedElement.style.left = `${newX}px`;
-            draggedElement.style.top = `${newY}px`;
-            
-            requestAnimationFrame(drawConnections);
-        }
+        draggedElement.style.left = `${newX}px`;
+        draggedElement.style.top = `${newY}px`;
+        
+        requestAnimationFrame(drawConnections);
     };
 
-    const endDrag = (e) => {
+    const endDrag = () => {
         if (draggedElement) {
             draggedElement.style.zIndex = 30;
-            
-            if (!isDragging) {
-                handleNodeClick(draggedElement);
-            }
         }
         draggedElement = null;
-        isDragging = false;
     };
     
     wrapper.addEventListener('mousedown', startDrag);
@@ -136,14 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ---------------------------------------------
-    // 3. SVG 연결선 동적 그리기 (★스크롤 좌표 계산 재정비 핵심 수정★)
+    // 3. SVG 연결선 동적 그리기 (★스크롤 문제 최종 해결★)
     // ---------------------------------------------
     
     const getNodeAbsolutePos = (nodeId) => {
         const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
         if (!nodeElement) return null;
 
-        // wrapper 내에서의 절대 위치 (offset)
         return { 
             x: nodeElement.offsetLeft, 
             y: nodeElement.offsetTop, 
@@ -156,7 +153,6 @@ document.addEventListener('DOMContentLoaded', () => {
         connectionLinesSvg.innerHTML = '';
         
         const connections = [];
-
         connections.push({ parentId: 'logo', childId: '소개', type: 'logo' });
         connections.push({ parentId: 'logo', childId: '1호', type: 'logo' });
 
@@ -168,12 +164,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // SVG 영역을 충분히 넓게 설정 (스크롤 영역 커버)
+        // SVG 영역을 스크롤 영역에 맞게 설정
         connectionLinesSvg.style.width = `${wrapper.scrollWidth}px`;
-        connectionLinesSvg.style.height = `${wrapper.offsetHeight}px`; // 높이는 뷰포트 고정
+        connectionLinesSvg.style.height = `${wrapper.offsetHeight}px`; 
 
         const scrollLeft = wrapper.scrollLeft;
-        const scrollTop = wrapper.scrollTop; // 현재는 0
+        const scrollTop = wrapper.scrollTop; 
 
         connections.forEach(conn => {
             const parentPos = getNodeAbsolutePos(conn.parentId);
@@ -183,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (parentPos && childPos && childNode) {
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 
-                // 1. 노드의 절대 위치 (wrapper 내) 계산
+                // 1. 노드의 절대 위치 (wrapper 내)
                 const absStartX = parentPos.x + (conn.parentId === 'logo' ? parentPos.width / 2 : parentPos.width);
                 const absStartY = parentPos.y + (conn.parentId === 'logo' ? parentPos.height : parentPos.height / 2);
                 
@@ -191,7 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const absEndY = childPos.y + childPos.height / 2;
                 
                 // 2. SVG 뷰포트 좌표로 변환 (절대 위치 - 스크롤 값)
-                // 이 subtraction이 스크롤 시 선이 노드를 따라가도록 보정하는 핵심입니다.
                 const svgStartX = absStartX - scrollLeft;
                 const svgStartY = absStartY - scrollTop; 
                 const svgEndX = absEndX - scrollLeft; 
@@ -208,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const midX = svgStartX + distanceX * 0.5;
                     dPath = `M ${svgStartX} ${svgStartY} L ${midX} ${svgStartY} L ${midX} ${svgEndY} L ${svgEndX} ${svgEndY}`;
                 } else {
-                    dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + 60} ${startY}, ${svgEndX - 60} ${svgEndY}, ${svgEndX} ${svgEndY}`;
+                    dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + 60} ${svgStartY}, ${svgEndX - 60} ${svgEndY}, ${svgEndX} ${svgEndY}`;
                 }
                 
                 path.setAttribute('d', dPath);
@@ -218,43 +213,40 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------------
-    // 4. 클릭 이벤트 및 모달 처리 로직 (유지)
+    // 4. 액션 버튼 클릭 로직 (★클릭 전담★)
     // ---------------------------------------------
     
-    const handleNodeClick = (node) => {
-        if (node.dataset.nodeId === 'logo') {
-            hideIssueChildren();
-            closeModal();
-            drawConnections();
-            return;
-        }
-
-        if (node.dataset.nodeId === '소개') {
-            hideIssueChildren();
-            const introArticle = articleData['intro_rekisi'];
-            showArticleModal(introArticle.title, 'REKISI 편집부', null, introArticle.content, 'article');
-            drawConnections();
-            return;
-        }
-
-        if (node.dataset.nodeId === '1호') {
-            toggleIssueChildren(node);
-            return;
-        }
+    wrapper.addEventListener('click', (e) => {
+        const actionBtn = e.target.closest('.node-action-btn');
+        if (!actionBtn) return;
         
-        if (node.classList.contains('node-author')) {
-            handleAuthorClick(node.dataset.nodeId);
-            return;
-        }
+        const actionType = actionBtn.dataset.actionType;
+        const parentNode = actionBtn.closest('.draggable-node');
+        const articleId = parentNode.dataset.articleId;
+        const nodeId = parentNode.dataset.nodeId;
         
-        if (node.classList.contains('article-link')) {
-            const articleId = node.dataset.articleId;
-            const article = articleData[articleId];
-            showArticleModal(article.title, article.author, article.author_intro, article.content, 'article');
-            return;
+        e.stopPropagation(); // 드래그 이벤트로 전파 방지
+
+        switch (actionType) {
+            case 'toggle':
+                toggleIssueChildren(parentNode);
+                break;
+            case 'intro':
+                const introArticle = articleData['intro_rekisi'];
+                showArticleModal(introArticle.title, 'REKISI 편집부', null, introArticle.content, 'article');
+                break;
+            case 'article-modal':
+                const article = articleData[articleId];
+                showArticleModal(article.title, article.author, article.author_intro, article.content, 'article');
+                break;
+            case 'author-modal':
+                handleAuthorClick(nodeId);
+                break;
+            default:
+                break;
         }
-    };
-    
+    });
+
     const toggleIssueChildren = (togglerNode) => {
         const isExpanded = togglerNode.classList.toggle('expanded');
         
@@ -286,6 +278,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(drawConnections, 50); 
     };
+
+    // ... (hideIssueChildren, handleAuthorClick, showArticleModal, closeModal 함수는 유지) ...
 
     const hideIssueChildren = () => {
         issue1Node.classList.remove('expanded');
