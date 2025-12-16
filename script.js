@@ -111,11 +111,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const startDrag = (e) => {
         const targetNode = e.target.closest('.draggable-node');
         
-        // ★수정: 버튼 클릭 시 드래그 막고, 기본 동작도 차단 (모바일 점프 현상 방지)★
-        if (!targetNode || e.target.closest('.node-action-btn')) {
+        // 액션 버튼이 클릭되면 드래그 시작을 막고, 기본 동작도 막아 클릭 이벤트만 발생
+        if (e.target.closest('.node-action-btn')) {
             e.preventDefault(); 
             return;
         }
+
+        // 드래그 가능한 노드가 아니면 함수 종료. (여기서 preventDefault()를 호출하지 않아야 스크롤이 작동함)
+        if (!targetNode) return;
 
         draggedElement = targetNode;
         
@@ -126,10 +129,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         draggedElement.style.zIndex = 40; 
 
-        // ★수정: mousedown과 touchstart 모두에서 기본 동작 차단 강화★
-        if (e.type === 'touchstart' || e.type === 'mousedown') {
-            e.preventDefault(); 
-        }
+        // ★수정: 드래그가 시작될 때만 preventDefault()를 호출하여 기본 동작(스크롤) 차단★
+        // 이 코드를 제거하면 모바일에서 노드 터치 시 스크롤이 되는 현상 방지
+        e.preventDefault(); 
     };
 
     const drag = (e) => {
@@ -147,9 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
         draggedElement.style.left = `${newX}px`;
         draggedElement.style.top = `${newY}px`;
         
-        // ★수정: 드래그 중에는 requestAnimationFrame 호출 제거 (scroll 이벤트에 맡김)★
-        // requestAnimationFrame(drawConnections);
-        drawConnections(); // 동기적으로 호출하여 선 분리 최소화
+        // 드래그 중 선 연결 업데이트
+        drawConnections(); 
     };
 
     const endDrag = () => {
@@ -159,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         draggedElement = null;
     };
     
+    // 이벤트 리스너
     wrapper.addEventListener('mousedown', startDrag);
     wrapper.addEventListener('mousemove', drag);
     wrapper.addEventListener('mouseup', endDrag);
