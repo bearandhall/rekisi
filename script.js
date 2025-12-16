@@ -27,15 +27,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let articleNodes = [];
 
     // ---------------------------------------------
-    // 1. 글 목록 노드 생성 및 UI 분리 (★체크박스 UI 추가★)
+    // 1. 초기 버튼들에 액션 버튼 추가 및 노드 생성 (유지)
     // ---------------------------------------------
 
-    // 초기 버튼들에 액션 버튼 추가
     const addActionButton = (node, actionType) => {
         const btn = document.createElement('div');
         btn.classList.add('node-action-btn');
-        btn.dataset.actionType = actionType; // 'toggle', 'modal', 'intro'
-        btn.innerHTML = actionType === 'toggle' ? '목록' : '&#x25A1;'; // ㅁ 기호
+        btn.dataset.actionType = actionType; 
+        btn.innerHTML = actionType === 'toggle' ? '목록' : '&#x25A1;';
         node.appendChild(btn);
     };
 
@@ -46,31 +45,29 @@ document.addEventListener('DOMContentLoaded', () => {
     issue1Articles.forEach((articleId) => {
         const article = articleData[articleId];
         
-        // 저자 노드
         const authorNode = document.createElement('div');
         authorNode.classList.add('draggable-node', 'node-author');
         authorNode.dataset.nodeId = article.author;
         authorNode.dataset.authorInfo = article.author; 
         authorNode.textContent = article.author;
-        addActionButton(authorNode, 'author-modal'); // 저자 모달 버튼
+        addActionButton(authorNode, 'author-modal'); 
         authorNode.style.display = 'none'; 
         issue1ChildrenContainer.appendChild(authorNode);
         articleNodes.push(authorNode);
         
-        // 제목 노드 (개별 글)
         const titleNode = document.createElement('div');
         titleNode.classList.add('draggable-node', 'node-title', 'article-link');
         titleNode.dataset.nodeId = article.title; 
         titleNode.dataset.articleId = articleId; 
         titleNode.textContent = article.title;
-        addActionButton(titleNode, 'article-modal'); // 글 모달 버튼
+        addActionButton(titleNode, 'article-modal'); 
         titleNode.style.display = 'none'; 
         issue1ChildrenContainer.appendChild(titleNode);
         articleNodes.push(titleNode);
     });
     
     // ---------------------------------------------
-    // 2. Drag & Drop 로직 (★클릭 처리 로직 완전 제거, 드래그만 담당★)
+    // 2. Drag & Drop 로직 (유지)
     // ---------------------------------------------
     
     const getClientCoords = (e) => {
@@ -82,8 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const startDrag = (e) => {
         const targetNode = e.target.closest('.draggable-node');
-        if (!targetNode || e.target.closest('.node-action-btn')) return; // ★액션 버튼 클릭 시 드래그 무시★
-        
+        if (!targetNode || e.target.closest('.node-action-btn')) return;
+
         draggedElement = targetNode;
         
         const coords = getClientCoords(e);
@@ -93,7 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         draggedElement.style.zIndex = 40; 
 
-        // 터치 환경에서 드래그 시작 시 스크롤/줌 방지
         if (e.type === 'touchstart') {
             e.preventDefault(); 
         }
@@ -102,12 +98,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const drag = (e) => {
         if (!draggedElement) return;
 
-        e.preventDefault(); // 드래그 중 텍스트 선택 및 스크롤 방지
+        e.preventDefault(); 
             
         const coords = getClientCoords(e);
         let newX = coords.x - offsetX;
         let newY = coords.y - offsetY;
         
+        // 현재 스크롤 위치를 더하여 래퍼 내에서의 절대 위치를 유지
         newX += wrapper.scrollLeft; 
         newY += wrapper.scrollTop;
 
@@ -134,13 +131,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ---------------------------------------------
-    // 3. SVG 연결선 동적 그리기 (★스크롤 문제 최종 해결★)
+    // 3. SVG 연결선 동적 그리기 (★스크롤 보정 로직 최종 수정★)
     // ---------------------------------------------
     
     const getNodeAbsolutePos = (nodeId) => {
         const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
         if (!nodeElement) return null;
 
+        // wrapper 내에서의 절대 위치 (offset)
         return { 
             x: nodeElement.offsetLeft, 
             y: nodeElement.offsetTop, 
@@ -187,6 +185,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const absEndY = childPos.y + childPos.height / 2;
                 
                 // 2. SVG 뷰포트 좌표로 변환 (절대 위치 - 스크롤 값)
+                // 이 subtraction이 스크롤 시 선이 노드를 따라가도록 보정하는 핵심
+                // 'wrapper'의 `overflow: auto`로 스크롤바가 생기면, 이 값은 **양수**이고 노드는 왼쪽으로 이동하므로 선은 오른쪽으로 움직여야 합니다.
+                // 따라서 좌표에서 scrollLeft를 빼는 것이 맞습니다.
                 const svgStartX = absStartX - scrollLeft;
                 const svgStartY = absStartY - scrollTop; 
                 const svgEndX = absEndX - scrollLeft; 
@@ -203,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const midX = svgStartX + distanceX * 0.5;
                     dPath = `M ${svgStartX} ${svgStartY} L ${midX} ${svgStartY} L ${midX} ${svgEndY} L ${svgEndX} ${svgEndY}`;
                 } else {
-                    dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + 60} ${svgStartY}, ${svgEndX - 60} ${svgEndY}, ${svgEndX} ${svgEndY}`;
+                    dPath = `M ${svgStartX} ${startY} C ${svgStartX + 60} ${svgStartY}, ${svgEndX - 60} ${svgEndY}, ${svgEndX} ${svgEndY}`;
                 }
                 
                 path.setAttribute('d', dPath);
@@ -213,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------------
-    // 4. 액션 버튼 클릭 로직 (★클릭 전담★)
+    // 4. 액션 버튼 클릭 로직 (유지)
     // ---------------------------------------------
     
     wrapper.addEventListener('click', (e) => {
@@ -225,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const articleId = parentNode.dataset.articleId;
         const nodeId = parentNode.dataset.nodeId;
         
-        e.stopPropagation(); // 드래그 이벤트로 전파 방지
+        e.stopPropagation(); 
 
         switch (actionType) {
             case 'toggle':
@@ -246,6 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
         }
     });
+
+    // ... (toggleIssueChildren, hideIssueChildren, handleAuthorClick, showArticleModal, closeModal 함수는 유지) ...
 
     const toggleIssueChildren = (togglerNode) => {
         const isExpanded = togglerNode.classList.toggle('expanded');
@@ -278,8 +281,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setTimeout(drawConnections, 50); 
     };
-
-    // ... (hideIssueChildren, handleAuthorClick, showArticleModal, closeModal 함수는 유지) ...
 
     const hideIssueChildren = () => {
         issue1Node.classList.remove('expanded');
