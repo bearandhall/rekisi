@@ -6,15 +6,42 @@
     <title>REKISI 노드맵</title>
     <link rel="stylesheet" href="style.css">
     
-    <script src="article.js"></script> 
-    
-    </head>
+    <script>
+        window.articleData = {
+            "intro_rekisi": {
+                "title": "소개",
+                "author": "REKISI 편집부",
+                "author_intro": null,
+                "content": ["레키시는 '역사'를 뜻하는 'レキシ'와 '기록'을 뜻하는 '記録'의 합성어입니다. 과거의 기록과 현재의 해석을 통해 미래를 조명합니다."],
+            },
+            "article_01": {
+                "title": "고전 기록에서 발견한 미래 도시의 청사진",
+                "author": "김철수",
+                "author_intro": "고대 도시 공학 전문가",
+                "content": ["고대 문명의 건축 방식과 도시 설계 원리를 현대 도시에 적용하는 연구를 진행하고 있습니다.", "이 글은 고전 문헌에 기록된 이상적인 도시의 조건과 그 가능성에 대해 탐구합니다."],
+            },
+            "article_02": {
+                "title": "잃어버린 언어, 시간의 미스터리를 해독하다",
+                "author": "박영희",
+                "author_intro": "언어 고고학 박사",
+                "content": ["수천 년 전 사라진 언어 조각을 모아, 그 언어가 담고 있던 역사적 맥락과 문화적 의미를 복원하는 과정에 대한 글입니다.", "언어는 단순한 소통 수단을 넘어, 시간 여행의 열쇠가 될 수 있습니다."],
+            },
+            "article_03": {
+                "title": "첨단 기술과 전통 공예의 아름다운 공존",
+                "author": "이민호",
+                "author_intro": "디자인 및 공예 평론가",
+                "content": ["디지털 제조 기술이 전통 공예품 제작에 미치는 영향을 분석하고, 기술과 장인 정신이 어떻게 새로운 형태의 예술을 창조하는지 논합니다.", "과거와 현재의 기술은 서로를 보완하는 역할을 합니다."],
+            }
+        };
+    </script>
+</head>
 <body>
 
     <div id="wrapper">
         <svg id="connection-lines"></svg>
         
-        <div id="logo-node" class="draggable-node" data-node-id="logo">REKISI</div>
+        <img src="logo.png" id="logo-node" class="draggable-node" data-node-id="logo" alt="REKISI 로고">
+        
         <div id="intro-node" class="draggable-node" data-node-id="소개">소개</div>
         <div id="issue-1-node" class="draggable-node" data-node-id="1호">1호</div>
 
