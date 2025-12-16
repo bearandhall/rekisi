@@ -3,7 +3,7 @@ body, html {
     margin: 0;
     padding: 0;
     height: 100%;
-    /* ★가로 스크롤 강력하게 방지 (핵심 안정화)★ */
+    /* 가로 스크롤 강력하게 방지 (핵심 안정화) */
     overflow-x: hidden; 
     overflow-y: hidden;
     font-family: 'Noto Sans KR', sans-serif;
@@ -14,7 +14,7 @@ body, html {
 #wrapper {
     position: relative;
     height: 100vh;
-    /* ★가로 스크롤 방지 2단계★ */
+    /* 가로 스크롤 방지 2단계 */
     overflow-x: hidden; 
     overflow-y: hidden;
     z-index: 10;
@@ -34,10 +34,10 @@ body, html {
     z-index: 20; 
 }
 
-/* ★로고 이미지 스타일★ */
+/* ★로고 이미지 스타일 (크기 100px로 축소)★ */
 #logo {
     display: block;
-    width: 150px; 
+    width: 100px; /* ★크기 조정★ */
     height: auto;
     cursor: pointer;
     margin-bottom: 20px;
