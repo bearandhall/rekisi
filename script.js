@@ -111,14 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const startDrag = (e) => {
         const targetNode = e.target.closest('.draggable-node');
         
-        // ★수정 1: 버튼 클릭 시 드래그 시작 막고 preventDefault() 호출 (버튼 클릭 방해 방지)
+        // 버튼 클릭 시 드래그 시작 막고 preventDefault() 호출
         if (e.target.closest('.node-action-btn')) {
             e.preventDefault(); 
             return;
         }
 
-        // 드래그 가능한 노드가 아니면 함수 종료. 
-        // 여기서 preventDefault()를 호출하지 않아야 빈 공간 터치 시 스크롤이 작동함
+        // 드래그 가능한 노드가 아니면 함수 종료. (스크롤 허용)
         if (!targetNode) return;
 
         draggedElement = targetNode;
@@ -130,8 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         draggedElement.style.zIndex = 40; 
 
-        // ★수정 2: 드래그가 시작될 때만 preventDefault()를 호출하여 기본 동작(스크롤) 차단★
-        // 이 코드가 노드를 잡았을 때 스크롤이 튕기는 현상을 막아줌
+        // 드래그 시작 시 기본 동작(스크롤) 차단
         e.preventDefault(); 
     };
 
@@ -151,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
         draggedElement.style.top = `${newY}px`;
         
         // 드래그 중 선 연결 업데이트
-        // requestAnimationFrame 사용 제거 (동기 업데이트를 통해 선 분리 최소화 시도)
         drawConnections(); 
     };
 
@@ -176,25 +173,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. SVG 연결선 동적 그리기 (스크롤 시 재계산)
     // ---------------------------------------------
     
-    const getNodeClientPos = (nodeId) => {
+    // ★수정 1: 노드의 wrapper 기준 절대 좌표와 크기를 반환하는 함수 (getBoundingClientRect 제거)
+    const getNodeWrapperPos = (nodeId) => {
         const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
         if (!nodeElement) return null;
-        return nodeElement.getBoundingClientRect();
+
+        // wrapper 기준 top/left 값은 style에서 가져옵니다 (단위: px)
+        const left = parseFloat(nodeElement.style.left || 0);
+        const top = parseFloat(nodeElement.style.top || 0);
+
+        // 노드의 실제 렌더링 크기를 가져옵니다.
+        const width = nodeElement.offsetWidth;
+        const height = nodeElement.offsetHeight;
+
+        return { left, top, width, height };
     };
     
-    // 스크롤 성능 향상을 위한 변수 추가
     let rafHandle = null; 
 
     const drawConnections = () => {
-        // 이미 예약된 업데이트가 있다면 취소
         if (rafHandle) {
             cancelAnimationFrame(rafHandle);
         }
         
-        // 다음 애니메이션 프레임에 맞춰 연결선을 업데이트
         rafHandle = requestAnimationFrame(() => {
             connectionLinesSvg.innerHTML = '';
             
+            // ★수정 2: SVG 크기를 wrapper의 전체 스크롤 영역 크기로 설정
+            connectionLinesSvg.style.width = `${wrapper.scrollWidth}px`;
+            connectionLinesSvg.style.height = `${wrapper.scrollHeight}px`; 
+
             const connections = [];
             connections.push({ parentId: 'logo', childId: '소개', type: 'logo' });
             connections.push({ parentId: 'logo', childId: '1호', type: 'logo' });
@@ -207,18 +215,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
             
-            connectionLinesSvg.style.width = `${window.innerWidth}px`;
-            connectionLinesSvg.style.height = `${window.innerHeight}px`; 
-
             connections.forEach(conn => {
-                const parentRect = getNodeClientPos(conn.parentId);
+                // ★수정 3: wrapper 기준 좌표 사용 (getNodeWrapperPos)
+                const parentRect = getNodeWrapperPos(conn.parentId);
                 const childElement = document.querySelector(`[data-node-id="${conn.childId}"]`);
-                const childRect = getNodeClientPos(conn.childId);
+                const childRect = getNodeWrapperPos(conn.childId);
                 
                 if (parentRect && childRect && childElement && childElement.style.display !== 'none') {
                     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     
-                    // 뷰포트 기준 좌표 사용
+                    // SVG는 이제 wrapper 기준이므로, 노드의 absolute top/left를 그대로 사용합니다.
                     const svgStartX = parentRect.left + (conn.parentId === 'logo' ? (parentRect.width * 0.5) : parentRect.width);
                     const svgStartY = parentRect.top + (conn.parentId === 'logo' ? parentRect.height : parentRect.height / 2);
                     
@@ -239,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     connectionLinesSvg.appendChild(path);
                 }
             });
-            rafHandle = null; // 작업 완료 후 핸들 초기화
+            rafHandle = null; 
         });
     };
 
@@ -372,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('resize', drawConnections);
-    // ★수정: 스크롤 이벤트 발생 시 requestAnimationFrame으로 래핑하여 호출 (성능 최적화 및 선 분리 해결 시도)
+    // 스크롤 이벤트 발생 시 requestAnimationFrame으로 래핑하여 호출 
     wrapper.addEventListener('scroll', drawConnections); 
     
     setTimeout(drawConnections, 10);
