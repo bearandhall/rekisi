@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const articleData = window.articleData || {};
     const issue1Articles = Object.keys(articleData).filter(id => id !== 'intro_rekisi');
 
-    // 배치 간격 정의
     const HORIZONTAL_OFFSET = 180; 
     const AUTHOR_TITLE_OFFSET = 150;
     const VERTICAL_SPACING = 50;
@@ -36,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     issue1Articles.forEach((articleId) => {
         const article = articleData[articleId];
         
-        // 저자 노드
         const authorNode = document.createElement('div');
         authorNode.classList.add('draggable-node', 'node-author');
         authorNode.dataset.nodeId = article.author;
@@ -46,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
         issue1ChildrenContainer.appendChild(authorNode);
         articleNodes.push(authorNode);
         
-        // 제목 노드 (클릭 가능)
         const titleNode = document.createElement('div');
         titleNode.classList.add('draggable-node', 'node-title', 'article-link');
         titleNode.dataset.nodeId = article.title; 
@@ -58,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // ---------------------------------------------
-    // 2. Drag & Drop 로직 (★터치 클릭 처리 로직 개선★)
+    // 2. Drag & Drop 로직 (★터치 클릭 안정화 - 문제 1 해결★)
     // ---------------------------------------------
     
     const getClientCoords = (e) => {
@@ -71,6 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const startDrag = (e) => {
         const targetNode = e.target.closest('.draggable-node');
         if (!targetNode) return;
+        
+        // ★모바일에서 기본 스크롤/줌 동작 방지 및 클릭 이벤트 보장★
+        if (e.type === 'touchstart') {
+            e.preventDefault(); 
+        }
 
         draggedElement = targetNode;
         isDragging = false;
@@ -115,13 +117,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (draggedElement) {
             draggedElement.style.zIndex = 30;
             
-            // ★개선된 터치/클릭 판단 로직★
-            // 1. 드래그로 판정된 적이 없거나 (isDragging === false)
-            // 2. 마우스 클릭 시작점과 끝점의 거리가 임계값 이내일 경우 (터치 튕김 방지)
             const coords = getClientCoords(e);
             const deltaX = Math.abs(coords.x - clickStartX);
             const deltaY = Math.abs(coords.y - clickStartY);
 
+            // 드래그가 없었거나, 이동 거리가 임계값 이내일 경우 클릭으로 간주
             if (!isDragging || (deltaX <= DRAG_THRESHOLD && deltaY <= DRAG_THRESHOLD)) {
                 handleNodeClick(draggedElement);
             }
@@ -130,6 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isDragging = false;
     };
     
+    // 마우스 이벤트 리스너
     wrapper.addEventListener('mousedown', startDrag);
     wrapper.addEventListener('mousemove', drag);
     wrapper.addEventListener('mouseup', endDrag);
@@ -140,18 +141,25 @@ document.addEventListener('DOMContentLoaded', () => {
     wrapper.addEventListener('touchend', endDrag);
 
     // ---------------------------------------------
-    // 3. SVG 연결선 동적 그리기 (유지)
+    // 3. SVG 연결선 동적 그리기 (★스크롤 및 잘림 방지 안정화 - 문제 2 해결★)
     // ---------------------------------------------
     
-    const getNodeRect = (nodeId) => {
+    const getNodeBoundingBox = (nodeId) => {
         const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
         if (!nodeElement) return null;
 
+        // getBoundingClientRect는 뷰포트 기준 좌표를 제공합니다.
+        const rect = nodeElement.getBoundingClientRect(); 
+
+        // 뷰포트 좌표에 현재 스크롤 값을 더하여 절대 좌표를 계산합니다.
+        const absX = rect.left + wrapper.scrollLeft;
+        const absY = rect.top + wrapper.scrollTop;
+        
         return { 
-            x: nodeElement.offsetLeft,
-            y: nodeElement.offsetTop, 
-            width: nodeElement.offsetWidth, 
-            height: nodeElement.offsetHeight,
+            absX: absX, 
+            absY: absY, 
+            width: rect.width, 
+            height: rect.height,
         }; 
     };
 
@@ -171,40 +179,43 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
+        // SVG 영역의 너비/높이를 현재 뷰포트와 스크롤 영역을 포함하도록 조정
+        const svgWidth = wrapper.scrollWidth;
+        const svgHeight = wrapper.offsetHeight; // 높이는 뷰포트 고정 (세로 스크롤 없음)
+        connectionLinesSvg.style.width = `${svgWidth}px`;
+        connectionLinesSvg.style.height = `${svgHeight}px`;
+
         connections.forEach(conn => {
-            const parentPos = getNodeRect(conn.parentId);
+            const parentBox = getNodeBoundingBox(conn.parentId);
             const childNode = document.querySelector(`[data-node-id="${conn.childId}"]`);
-            const childPos = getNodeRect(conn.childId);
+            const childBox = getNodeBoundingBox(conn.childId);
             
-            if (parentPos && childPos && childNode) {
+            if (parentBox && childBox && childNode) {
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 
                 const scrollLeft = wrapper.scrollLeft;
-                const scrollTop = wrapper.scrollTop;
+                const scrollTop = wrapper.scrollTop; // 현재는 overflow-y: hidden 이므로 0
 
-                const startX = parentPos.x + (conn.parentId === 'logo' ? parentPos.width / 2 : parentPos.width);
-                const startY = parentPos.y + (conn.parentId === 'logo' ? parentPos.height : parentPos.height / 2);
+                // 시작점: 부모 노드의 절대 좌표 (ABS - SCROLL) = SVG 뷰포트 좌표
+                const startX = parentBox.absX + (conn.parentId === 'logo' ? parentBox.width / 2 : parentBox.width) - scrollLeft;
+                const startY = parentBox.absY + (conn.parentId === 'logo' ? parentBox.height : parentBox.height / 2) - scrollTop;
                 
-                const endX = childPos.x; 
-                const endY = childPos.y + childPos.height / 2;
-
-                const svgStartX = startX - scrollLeft;
-                const svgStartY = startY - scrollTop;
-                const svgEndX = endX - scrollLeft;
-                const svgEndY = endY - scrollTop;
+                // 끝점: 자식 노드의 절대 좌표 (ABS - SCROLL) = SVG 뷰포트 좌표
+                const endX = childBox.absX - scrollLeft; 
+                const endY = childBox.absY + childBox.height / 2 - scrollTop;
                 
-                const distanceX = svgEndX - svgStartX;
-                const distanceY = svgEndY - svgStartY;
+                const distanceX = endX - startX;
+                const distanceY = endY - startY;
 
                 let dPath;
 
                 if (conn.type === 'logo') {
-                    dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + 30} ${svgStartY + 30}, ${svgEndX - 30} ${svgEndY}, ${svgEndX} ${svgEndY}`;
+                    dPath = `M ${startX} ${startY} C ${startX + 30} ${startY + 30}, ${endX - 30} ${endY}, ${endX} ${endY}`;
                 } else if (conn.type === 'straight') {
-                    const midX = svgStartX + distanceX * 0.5;
-                    dPath = `M ${svgStartX} ${svgStartY} L ${midX} ${svgStartY} L ${midX} ${svgEndY} L ${svgEndX} ${svgEndY}`;
+                    const midX = startX + distanceX * 0.5;
+                    dPath = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`;
                 } else {
-                    dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + 60} ${svgStartY}, ${svgEndX - 60} ${svgEndY}, ${svgEndX} ${svgEndY}`;
+                    dPath = `M ${startX} ${startY} C ${startX + 60} ${startY}, ${endX - 60} ${endY}, ${endX} ${endY}`;
                 }
                 
                 path.setAttribute('d', dPath);
@@ -344,5 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('resize', drawConnections);
+    // 모바일 스크롤 발생 시 선 다시 그리기
+    wrapper.addEventListener('scroll', drawConnections); 
     setTimeout(drawConnections, 10);
 });
