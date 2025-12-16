@@ -1,5 +1,3 @@
-// script.js 파일 전체 내용입니다. (이전 최종 안정화 코드에서 수정된 부분만 강조)
-
 document.addEventListener('DOMContentLoaded', () => {
     const wrapper = document.getElementById('wrapper');
     const connectionLinesSvg = document.getElementById('connection-lines');
@@ -29,11 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let articleNodes = [];
 
     // ---------------------------------------------
-    // 1. 초기 버튼들에 액션 버튼 추가 및 노드 생성
+    // 1. 초기 버튼들에 액션 버튼 추가 및 노드 생성 (유지)
     // ---------------------------------------------
 
     const addActionButton = (node, actionType) => {
-        // ★로고 노드에는 액션 버튼을 추가하지 않음★
         if (node.dataset.nodeId === 'logo') return; 
 
         const btn = document.createElement('div');
@@ -43,11 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
         node.appendChild(btn);
     };
 
-    // 로고 노드에 액션 버튼 추가하지 않음 (startDrag에서 처리)
     addActionButton(introNode, 'intro');
     addActionButton(issue1Node, 'toggle');
 
-    // ... (노드 생성 로직 유지) ...
+
     issue1Articles.forEach((articleId) => {
         const article = articleData[articleId];
         
@@ -136,20 +132,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ---------------------------------------------
-    // 3. SVG 연결선 동적 그리기 (유지)
+    // 3. SVG 연결선 동적 그리기 (최종 수정: 뷰포트 기준 좌표 및 부드러운 선)
     // ---------------------------------------------
     
-    const getNodeAbsolutePos = (nodeId) => {
+    // 노드의 위치를 뷰포트 기준으로 가져오는 함수
+    const getNodeClientPos = (nodeId) => {
         const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
         if (!nodeElement) return null;
-
-        // wrapper 내에서의 절대 위치 (offset)
-        return { 
-            x: nodeElement.offsetLeft, 
-            y: nodeElement.offsetTop, 
-            width: nodeElement.offsetWidth, 
-            height: nodeElement.offsetHeight,
-        }; 
+        return nodeElement.getBoundingClientRect();
     };
 
     const drawConnections = () => {
@@ -162,50 +152,39 @@ document.addEventListener('DOMContentLoaded', () => {
         if (issue1Node.classList.contains('expanded')) {
             issue1Articles.forEach(articleId => {
                 const article = articleData[articleId];
-                // 1호 -> 저자 연결 (Parent)
                 connections.push({ parentId: '1호', childId: article.author, type: 'parent' });
-                // 저자 -> 글 제목 연결 (Straight)
                 connections.push({ parentId: article.author, childId: article.title, type: 'straight' });
             });
         }
         
-        connectionLinesSvg.style.width = `${wrapper.scrollWidth}px`;
-        connectionLinesSvg.style.height = `${wrapper.offsetHeight}px`; 
-
-        const scrollLeft = wrapper.scrollLeft;
-        const scrollTop = wrapper.scrollTop; 
+        // SVG는 fixed position이므로 크기를 뷰포트 크기로 설정
+        connectionLinesSvg.style.width = `${window.innerWidth}px`;
+        connectionLinesSvg.style.height = `${window.innerHeight}px`; 
 
         connections.forEach(conn => {
-            const parentPos = getNodeAbsolutePos(conn.parentId);
-            const childNode = document.querySelector(`[data-node-id="${conn.childId}"]`);
-            const childPos = getNodeAbsolutePos(conn.childId);
+            const parentRect = getNodeClientPos(conn.parentId);
+            const childElement = document.querySelector(`[data-node-id="${conn.childId}"]`);
+            const childRect = getNodeClientPos(conn.childId);
             
-            if (parentPos && childPos && childNode && childNode.style.display !== 'none') { // ★노드가 표시될 때만 그림★
+            if (parentRect && childRect && childElement && childElement.style.display !== 'none') {
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 
-                const absStartX = parentPos.x + (conn.parentId === 'logo' ? parentPos.width / 2 : parentPos.width);
-                const absStartY = parentPos.y + (conn.parentId === 'logo' ? parentPos.height : parentPos.height / 2);
+                // 뷰포트 기준 좌표 사용 (scroll 보정 필요 없음)
+                const svgStartX = parentRect.left + (conn.parentId === 'logo' ? parentRect.width / 2 : parentRect.width);
+                const svgStartY = parentRect.top + (conn.parentId === 'logo' ? parentRect.height : parentRect.height / 2);
                 
-                const absEndX = childPos.x; 
-                const absEndY = childPos.y + childPos.height / 2;
+                const svgEndX = childRect.left; 
+                const svgEndY = childRect.top + childRect.height / 2;
                 
-                const svgStartX = absStartX - scrollLeft;
-                const svgStartY = absStartY - scrollTop; 
-                const svgEndX = absEndX - scrollLeft; 
-                const svgEndY = absEndY - scrollTop;
-                
-                const distanceX = svgEndX - svgStartX;
-                const distanceY = svgEndY - svgStartY;
-
                 let dPath;
 
                 if (conn.type === 'logo') {
+                    // 로고 연결 곡선
                     dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + 30} ${svgStartY + 30}, ${svgEndX - 30} ${svgEndY}, ${svgEndX} ${svgEndY}`;
-                } else if (conn.type === 'straight') {
-                    const midX = svgStartX + distanceX * 0.5;
-                    dPath = `M ${svgStartX} ${svgStartY} L ${midX} ${svgStartY} L ${midX} ${svgEndY} L ${svgEndX} ${svgEndY}`;
-                } else {
-                    dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + 60} ${svgStartY}, ${svgEndX - 60} ${svgEndY}, ${svgEndX} ${svgEndY}`;
+                } else if (conn.type === 'straight' || conn.type === 'parent') {
+                    // ★수정: 'straight'와 'parent' 모두 부드러운 곡선으로 변경★
+                    const offset = 80; 
+                    dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + offset} ${svgStartY}, ${svgEndX - offset} ${svgEndY}, ${svgEndX} ${svgEndY}`;
                 }
                 
                 path.setAttribute('d', dPath);
@@ -215,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------------
-    // 4. 액션 버튼 클릭 로직
+    // 4. 액션 버튼 클릭 로직 (유지)
     // ---------------------------------------------
     
     wrapper.addEventListener('click', (e) => {
@@ -278,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // ★노드가 화면에 표시된 후 선을 그리도록 딜레이 추가 (200ms)★
+        // 노드가 화면에 표시된 후 선을 그리도록 딜레이 유지
         setTimeout(drawConnections, 200); 
     };
 
@@ -344,7 +323,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.key === 'Escape') { closeModal(); }
     });
 
+    // ★수정: 윈도우 resize 이벤트에 drawConnections 바인딩★
     window.addEventListener('resize', drawConnections);
-    wrapper.addEventListener('scroll', drawConnections); 
+    // ★수정: wrapper 스크롤 이벤트 제거 (position: fixed로 인해 불필요)★
+    // wrapper.addEventListener('scroll', drawConnections); 
+    
     setTimeout(drawConnections, 10);
 });
