@@ -4,7 +4,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const articlesListDiv = document.querySelector('.articles-list');
     const logoElement = document.getElementById('logo'); 
     
-    // ... (이전 코드 유지)
+    // 모달 관련 요소 (생략된 부분)
+    const modal = document.getElementById('article-modal');
+    const closeBtn = document.querySelector('.close-btn');
+    const modalTitle = document.getElementById('modal-article-title');
+    const modalMeta = document.getElementById('modal-article-meta');
+    const modalBody = document.getElementById('modal-article-body');
+    
+    // (1. 글 목록 동적 생성 - 유지)
+    const articleData = window.articleData || {}; // articles.js 파일의 데이터를 사용한다고 가정
     const issue1Articles = Object.keys(articleData).filter(id => id !== 'intro_rekisi');
     
     const introSectionChildren = document.querySelector('#intro-section .menu-children');
@@ -33,19 +41,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ---------------------------------------------
-    // 2. SVG 연결선 그리기 함수 (★스크롤 반영하여 수정★)
+    // 2. SVG 연결선 그리기 함수 (★선 연결 안정화★)
     // ---------------------------------------------
     const drawConnections = () => {
         connectionLinesSvg.innerHTML = '';
         
         const connections = [
-            { parent: 'logo', child: '소개', startType: 'bottom-center' },
-            { parent: 'logo', child: '1호', startType: 'bottom-center' },
+            { parent: 'logo', child: '소개', type: 'logo' },
+            { parent: 'logo', child: '1호', type: 'logo' },
         ];
 
         const introChildren = document.querySelector('#intro-section .menu-children');
         if (introChildren.classList.contains('expanded')) {
-            connections.push({ parent: '소개', child: '소개글' });
+            connections.push({ parent: '소개', child: '소개글', type: 'parent' });
         }
 
         const articlesContainer = document.querySelector('#issue-1-section .menu-children');
@@ -53,33 +61,38 @@ document.addEventListener('DOMContentLoaded', () => {
         if (articlesContainer.classList.contains('expanded')) {
              issue1Articles.forEach(articleId => {
                  const article = articleData[articleId];
-                 
-                 connections.push({ parent: '1호', child: article.author });
+                 connections.push({ parent: '1호', child: article.author, type: 'parent' });
                  connections.push({ parent: article.author, child: article.title, type: 'straight' });
              });
         }
         
+        // ★스크롤 위치와 노드 좌표를 정확히 계산하는 함수★
         const getNodeRect = (nodeId) => {
             const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
             if (!nodeElement) return null;
 
             const rect = nodeElement.getBoundingClientRect();
-            // sidebar의 스크롤 위치를 가져와 보정합니다. (핵심 수정)
-            const scrollCompensation = sidebar.scrollTop; 
             
-            let x, y;
+            let startX, startY;
             
             if (nodeId === 'logo') { 
-                // 로고 중앙 하단에서 선 시작
-                x = rect.left + rect.width / 2; // X
-                y = rect.bottom; // Y (스크롤은 나중에 SVG 좌표에 반영)
+                // 로고 중앙 하단
+                startX = rect.left + rect.width / 2; 
+                startY = rect.bottom; 
             } else {
-                // 일반 노드 오른쪽 중앙에서 선 시작
-                x = rect.left + rect.width;
-                y = rect.top + rect.height / 2;
+                // 일반 노드 오른쪽 중앙
+                startX = rect.left + rect.width;
+                startY = rect.top + rect.height / 2;
             }
             
-            return { x, y, scrollCompensation }; // 스크롤 보정 값을 함께 반환
+            // 뷰포트 기준 좌표와 sidebar 스크롤 값을 반환
+            return { 
+                x: startX, 
+                y: startY, 
+                width: rect.width,
+                height: rect.height,
+                scrollTop: sidebar.scrollTop 
+            }; 
         };
 
         connections.forEach(conn => {
@@ -87,94 +100,117 @@ document.addEventListener('DOMContentLoaded', () => {
             const childNode = document.querySelector(`[data-node-id="${conn.child}"]`);
             const childPos = getNodeRect(conn.child);
             
-            if (parentPos && childPos) {
+            if (parentPos && childPos && childNode) {
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                
-                // 화면 기준으로 절대 좌표 계산 (parentPos/childPos는 이미 뷰포트 기준)
-                const startX = parentPos.x; 
-                const startY = parentPos.y + parentPos.scrollCompensation; // 스크롤 보정 적용 (Y축만)
-                
-                // 자식 노드의 왼쪽 끝 좌표 계산
-                const endX = childPos.x - (childNode ? childNode.offsetWidth : 0); 
-                const endY = childPos.y + childPos.scrollCompensation; // 스크롤 보정 적용 (Y축만)
 
-                const distanceX = endX - startX;
-                const distanceY = endY - startY;
+                // 뷰포트 기준 Y 좌표에 현재 스크롤 값을 더하여 SVG의 Y 좌표를 결정 (스크롤 보정)
+                const finalSvgStartY = parentPos.y + parentPos.scrollTop; 
+                const finalSvgEndY = childPos.y + childPos.scrollTop;
+                
+                // X 좌표는 뷰포트 기준으로 사용
+                const svgStartX = parentPos.x;
+                const svgEndX = childPos.x - childNode.offsetWidth;
+                
+                const distanceX = svgEndX - svgStartX;
+                const distanceY = finalSvgEndY - finalSvgStartY;
+                
+                let dPath;
 
-                // SVG 좌표는 항상 0,0을 기준으로 하므로,
-                // 스크롤이 적용된 절대 좌표에서 스크롤 값을 다시 빼서 SVG의 뷰포트에 맞춥니다.
-                // 하지만 GBCR이 뷰포트 기준이므로, SVG의 뷰포트를 기준으로 다시 계산.
-                // SVG 좌표 (뷰포트 기준)
-                const svgStartX = startX;
-                const svgStartY = parentPos.y;
-                const svgEndX = endX;
-                const svgEndY = childPos.y;
-                
-                const currentScrollY = sidebar.scrollTop;
-                
-                // 뷰포트 기준으로 계산된 GBCR 값에, 현재 스크롤 값을 더해서 실제 페이지상의 위치를 구합니다.
-                // 그리고 이를 SVG의 Y 좌표로 사용합니다. (SVG는 Fixed position처럼 작동하므로)
-                const finalSvgStartY = svgStartY + currentScrollY;
-                const finalSvgEndY = svgEndY + currentScrollY;
-                
-                // Y 좌표만 스크롤에 따라 이동해야 하므로, 최종적으로 Y좌표에 스크롤 값을 더합니다.
-                
-                if (conn.parent === 'logo') {
-                    path.setAttribute('d', `M ${svgStartX} ${finalSvgStartY} C ${svgStartX + 10} ${finalSvgStartY + 10}, ${svgEndX - 10} ${finalSvgEndY}, ${svgEndX} ${finalSvgEndY}`);
+                if (conn.type === 'logo') {
+                    // 로고에서 뻗어나가는 선
+                    dPath = `M ${svgStartX} ${finalSvgStartY} C ${svgStartX + 10} ${finalSvgStartY + 10}, ${svgEndX - 10} ${finalSvgEndY}, ${svgEndX} ${finalSvgEndY}`;
                 } else if (conn.type === 'straight') {
+                     // 저자 -> 제목 연결: L-자형
                     const midX = svgStartX + distanceX * 0.5;
-                    path.setAttribute('d', `M ${svgStartX} ${finalSvgStartY} L ${midX} ${finalSvgStartY} L ${midX} ${finalSvgEndY} L ${svgEndX} ${finalSvgEndY}`);
-                } else if (conn.parent === '소개' || conn.parent === '1호') {
-                    path.setAttribute('d', `M ${svgStartX} ${finalSvgStartY} C ${svgStartX + 40} ${finalSvgStartY}, ${svgEndX - 40} ${finalSvgEndY}, ${svgEndX} ${finalSvgEndY}`);
+                    dPath = `M ${svgStartX} ${finalSvgStartY} L ${midX} ${finalSvgStartY} L ${midX} ${finalSvgEndY} L ${svgEndX} ${finalSvgEndY}`;
                 } else {
-                    // 일반적인 곡선 계산은 유지 (X 거리와 Y 거리를 사용하여 곡선 정의)
-                    const curveControlY1 = finalSvgStartY + distanceY * 0.9;
-                    const curveControlY2 = finalSvgEndY - distanceY * 0.9;
-                    path.setAttribute('d', `M ${svgStartX} ${finalSvgStartY} C ${svgStartX + distanceX * 0.1} ${curveControlY1}, ${svgEndX - distanceX * 0.1} ${curveControlY2}, ${svgEndX} ${finalSvgEndY}`);
+                    // 1단계 하위 노드 (소개 -> 소개글, 1호 -> 저자)
+                    dPath = `M ${svgStartX} ${finalSvgStartY} C ${svgStartX + 40} ${finalSvgStartY}, ${svgEndX - 40} ${finalSvgEndY}, ${svgEndX} ${finalSvgEndY}`;
                 }
                 
+                path.setAttribute('d', dPath);
                 connectionLinesSvg.appendChild(path);
             }
         });
     };
     
-    // ... (이전 코드 유지: 모달 표시/닫기 함수)
+    // (3. 모달 표시/닫기 함수 - 유지)
+    const showArticleModal = (articleId) => {
+        const article = articleData[articleId];
+        if (!article) { closeModal(); return; }
+        
+        // 내용 채우기 (생략)
+        modalTitle.textContent = article.title;
+        modalMeta.textContent = `${article.author} | ${article.date}`;
+        modalBody.innerHTML = article.content.map(p => `<p>${p}</p>`).join('');
+
+        document.querySelectorAll('.node').forEach(node => node.classList.remove('active'));
+        const activeNode = document.querySelector(`[data-article-id="${articleId}"]`);
+        if (activeNode) { activeNode.classList.add('active'); }
+        
+        modal.style.display = 'block';
+        modal.scrollTop = 0;
+    };
+    
     const closeModal = () => {
-        const modal = document.getElementById('article-modal');
         modal.style.display = 'none';
         document.querySelectorAll('.node').forEach(node => node.classList.remove('active'));
     };
     
-    // ... (이전 코드 유지: 이벤트 리스너)
+    const toggleArticlesList = (target) => {
+        const list = target.closest('.menu-section').querySelector('.menu-children');
+        const isExpanded = list.classList.contains('expanded');
+        
+        if (isExpanded) {
+            list.classList.remove('expanded');
+        } else {
+            list.classList.add('expanded');
+        }
+
+        setTimeout(drawConnections, 300);
+    };
+
+
+    // ---------------------------------------------
+    // 4. 이벤트 리스너 및 초기화 (★토글러 이벤트 확인★)
+    // ---------------------------------------------
     sidebar.addEventListener('click', (event) => {
         const node = event.target.closest('.node');
+        
         if (node) {
-            // ... (이전 로직 유지)
+            if (node.id === 'logo') {
+                closeModal(); 
+                document.querySelectorAll('.menu-children').forEach(list => list.classList.remove('expanded'));
+                setTimeout(drawConnections, 400);
+            } else if (node.classList.contains('article-link')) {
+                // 글 제목 클릭 (하위 노드 및 소개 노드)
+                showArticleModal(node.dataset.articleId);
+            } else if (node.classList.contains('toggler')) {
+                // ★'소개' 또는 '1호' 클릭 (문제 해결)★
+                closeModal();
+                toggleArticlesList(node);
+            }
         }
     });
 
+    // 로고 이벤트 (여전히 필요)
     logoElement.addEventListener('click', () => {
         closeModal(); 
         document.querySelectorAll('.menu-children').forEach(list => list.classList.remove('expanded'));
         setTimeout(drawConnections, 400);
     });
 
-    // 모달 닫기 이벤트 등 (이전 코드 유지)
-    document.querySelector('.close-btn').addEventListener('click', closeModal);
+    // 모달 닫기 이벤트 등 (유지)
+    closeBtn.addEventListener('click', closeModal);
     window.addEventListener('click', (event) => {
-        if (event.target === document.getElementById('article-modal')) {
-            closeModal();
-        }
+        if (event.target === modal) { closeModal(); }
     });
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            closeModal();
-        }
+        if (event.key === 'Escape') { closeModal(); }
     });
 
-    // 스크롤 이벤트에 따라 선을 다시 그리도록 바인딩
     window.addEventListener('resize', drawConnections);
-    sidebar.addEventListener('scroll', drawConnections); 
+    sidebar.addEventListener('scroll', drawConnections);
 
     // 초기 로드 시: 하위 메뉴 숨기기 및 선 그리기
     document.querySelectorAll('.menu-children').forEach(list => {
