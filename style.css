@@ -14,16 +14,16 @@ body {
     position: relative;
     width: 100%;
     height: 100%;
-    overflow-x: auto; 
-    overflow-y: hidden; 
+    overflow-x: auto; /* 가로 스크롤 허용 */
+    /* ★수정: 세로 스크롤 허용 (토글된 목록 보기)★ */
+    overflow-y: auto; 
 }
 
 #connection-lines {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    /* width와 height는 script.js에서 wrapper.scrollWidth/offsetHeight를 따름 */
     z-index: 20;
     pointer-events: none; 
 }
@@ -56,20 +56,17 @@ body {
 
 /* 특정 노드 스타일 */
 #logo-node {
-    /* ★수정: 폰트 크기 축소★ */
-    font-size: 1.5em; 
+    /* ★수정: 폰트 크기 1.2em로 더 축소★ */
+    font-size: 1.2em; 
     font-weight: 900;
     border: none;
     box-shadow: none;
     background: none;
-    padding: 0;
+    padding: 5px; /* 시각적 여백 유지 */
     min-width: 0;
     width: fit-content; 
     height: auto;
     text-indent: 0; 
-    
-    /* 로고 노드에만 마진을 추가하여 다른 노드와 약간의 시각적 구분 */
-    padding: 5px;
 }
 #intro-node, #issue-1-node {
     font-weight: bold;
@@ -134,7 +131,6 @@ body {
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     
-    /* ★수정: 모달 내용이 화면을 넘지 않도록 최대 높이 설정★ */
     max-height: 80vh; 
     display: flex;
     flex-direction: column;
@@ -159,7 +155,7 @@ body {
     margin-bottom: 5px;
     border-bottom: 2px solid #333;
     padding-bottom: 5px;
-    flex-shrink: 0; /* 제목은 축소되지 않음 */
+    flex-shrink: 0; 
 }
 
 #modal-article-meta {
@@ -178,11 +174,10 @@ body {
     flex-shrink: 0;
 }
 
-/* ★수정: 실제 본문 내용에 스크롤 적용★ */
 #modal-article-body {
     overflow-y: auto; 
-    padding-right: 15px; /* 스크롤바 때문에 내용이 잘리지 않도록 오른쪽 여백 추가 */
-    flex-grow: 1; /* 남은 공간을 모두 차지 */
+    padding-right: 15px; 
+    flex-grow: 1; 
 }
 
 #modal-article-body p {
