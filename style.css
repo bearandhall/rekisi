@@ -1,39 +1,6 @@
-/* style.css */
+/* style.css 파일에 아래 스타일을 적용하거나 기존 내용을 수정하세요. */
 
-body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Noto Sans KR', sans-serif;
-    color: #333;
-    background-color: #f8f8f8;
-    overflow: hidden; /* 전체 페이지 스크롤 방지 */
-    height: 100vh;
-}
-
-#wrapper {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow-x: auto; /* 가로 스크롤 허용 */
-    overflow-y: hidden; /* 세로 스크롤 방지 */
-}
-
-#connection-lines {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 20;
-    pointer-events: none; /* SVG가 클릭을 방해하지 않도록 */
-}
-
-#connection-lines path {
-    fill: none;
-    stroke: #333;
-    stroke-width: 2;
-    transition: stroke-width 0.3s;
-}
+/* ... (상단 내용 유지) ... */
 
 /* 드래그 가능한 노드 공통 스타일 */
 .draggable-node {
@@ -45,7 +12,9 @@ body {
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
     cursor: grab;
     z-index: 30;
-    min-width: 80px;
+    /* ★수정: 텍스트 크기에 맞게 너비 조절★ */
+    width: fit-content; 
+    min-width: 0; /* min-width 제거 */
     text-align: center;
 }
 
@@ -62,117 +31,15 @@ body {
     background: none;
     padding: 0;
     min-width: 0;
-    width: 150px;
-    height: 150px;
-    /* 로고 이미지 자리 가정 */
-    text-indent: -9999px;
-    background-image: url('logo_placeholder.svg'); /* REKISI 로고 이미지 파일 경로 */
-    background-size: contain;
-    background-repeat: no-repeat;
+    width: fit-content; /* 로고도 내용물에 맞게 */
+    height: auto;
+    /* ★수정: 텍스트를 다시 보이게 함 (text-indent 제거)★ */
+    text-indent: 0; 
+    /* background-image: url('logo_placeholder.svg'); 제거하거나 주석 처리 */
 }
 #intro-node, #issue-1-node {
     font-weight: bold;
-    min-width: 100px;
+    /* min-width 제거 */
 }
 
-.node-author {
-    background-color: #e6f7ff;
-}
-
-.node-title {
-    background-color: #fff0e6;
-    font-size: 0.9em;
-}
-
-/* ★새로운 액션 버튼 스타일★ */
-.node-action-btn {
-    position: absolute;
-    /* ★위치 조정: 노드 오른쪽 아래 바깥으로 이동★ */
-    bottom: -10px; 
-    right: -10px; 
-    
-    width: 20px;
-    height: 20px;
-    background-color: #ffffff; 
-    border: 1px solid #333; 
-    border-radius: 3px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    font-size: 10px;
-    font-weight: bold;
-    color: #333;
-    z-index: 50; 
-    box-shadow: 1px 1px 3px rgba(0,0,0,0.2); 
-}
-
-.node-action-btn:hover {
-    background-color: #e0e0e0;
-}
-
-
-/* 모달 스타일 */
-#article-modal {
-    display: none;
-    position: fixed;
-    z-index: 100;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
-}
-
-.modal-content {
-    background-color: #fff;
-    margin: 10% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 700px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.close-btn {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close-btn:hover,
-.close-btn:focus {
-    color: #000;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-#modal-article-title {
-    font-size: 1.5em;
-    margin-bottom: 5px;
-    border-bottom: 2px solid #333;
-    padding-bottom: 5px;
-}
-
-#modal-article-meta {
-    font-size: 0.9em;
-    color: #555;
-    margin-bottom: 15px;
-}
-
-#modal-author-intro {
-    font-style: italic;
-    margin-bottom: 20px;
-    padding: 10px;
-    background-color: #f0f0f0;
-    border-left: 3px solid #ccc;
-}
-
-#modal-article-body p {
-    line-height: 1.6;
-    margin-bottom: 1em;
-    text-align: justify;
-}
+/* ... (나머지 내용 유지) ... */
