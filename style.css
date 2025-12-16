@@ -6,14 +6,15 @@ body {
     font-family: 'Noto Sans KR', sans-serif;
     color: #333;
     background-color: #f8f8f8;
-    overflow: hidden; 
+    overflow-x: auto; /* 가로 스크롤을 허용 */
+    overflow-y: hidden; /* 세로 스크롤은 wrapper에서 관리하므로 숨김 (필요시 auto) */
     height: 100vh;
 }
 
 #wrapper {
     position: relative;
-    width: 100%;
-    height: 100%;
+    /* width: 100%; */
+    /* height: 100%; */
     overflow-x: auto; 
     overflow-y: auto; 
 }
@@ -201,5 +202,6 @@ body {
         padding-bottom: 200px; 
     }
 }
+
 
 
