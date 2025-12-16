@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let offsetX, offsetY;
     let isDragging = false;
     let clickStartX, clickStartY;
+    let clickTimer = null; // 클릭 지연을 위한 타이머
     const DRAG_THRESHOLD = 5; 
 
     const articleData = window.articleData || {};
@@ -55,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // ---------------------------------------------
-    // 2. Drag & Drop 로직 (★터치 클릭 안정화 - 문제 1 해결★)
+    // 2. Drag & Drop 로직 (★클릭/터치 안정화 핵심 수정★)
     // ---------------------------------------------
     
     const getClientCoords = (e) => {
@@ -69,8 +70,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetNode = e.target.closest('.draggable-node');
         if (!targetNode) return;
         
-        // ★모바일에서 기본 스크롤/줌 동작 방지 및 클릭 이벤트 보장★
-        if (e.type === 'touchstart') {
+        // 터치 시작 시 기본 스크롤/줌 동작 방지
+        if (e.type === 'touchstart' || e.type === 'mousedown') {
+             // 브라우저 기본 동작 방지 (특히 모바일 탭 시 튕김 방지)
             e.preventDefault(); 
         }
 
@@ -90,6 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const drag = (e) => {
         if (!draggedElement) return;
+
+        // 드래그 중에는 기본 이벤트 방지 (스크롤/텍스트 선택 방지)
+        e.preventDefault(); 
 
         const coords = getClientCoords(e);
         const deltaX = Math.abs(coords.x - clickStartX);
@@ -117,12 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (draggedElement) {
             draggedElement.style.zIndex = 30;
             
-            const coords = getClientCoords(e);
-            const deltaX = Math.abs(coords.x - clickStartX);
-            const deltaY = Math.abs(coords.y - clickStartY);
-
-            // 드래그가 없었거나, 이동 거리가 임계값 이내일 경우 클릭으로 간주
-            if (!isDragging || (deltaX <= DRAG_THRESHOLD && deltaY <= DRAG_THRESHOLD)) {
+            // ★ 클릭/탭 처리 로직 (이동이 없었을 경우 클릭으로 처리)
+            if (!isDragging) {
+                // 클릭 이벤트를 지연 없이 바로 처리
                 handleNodeClick(draggedElement);
             }
         }
@@ -140,18 +142,17 @@ document.addEventListener('DOMContentLoaded', () => {
     wrapper.addEventListener('touchmove', drag);
     wrapper.addEventListener('touchend', endDrag);
 
+
     // ---------------------------------------------
-    // 3. SVG 연결선 동적 그리기 (★스크롤 및 잘림 방지 안정화 - 문제 2 해결★)
+    // 3. SVG 연결선 동적 그리기 (유지)
     // ---------------------------------------------
     
     const getNodeBoundingBox = (nodeId) => {
         const nodeElement = document.querySelector(`[data-node-id="${nodeId}"]`);
         if (!nodeElement) return null;
 
-        // getBoundingClientRect는 뷰포트 기준 좌표를 제공합니다.
         const rect = nodeElement.getBoundingClientRect(); 
 
-        // 뷰포트 좌표에 현재 스크롤 값을 더하여 절대 좌표를 계산합니다.
         const absX = rect.left + wrapper.scrollLeft;
         const absY = rect.top + wrapper.scrollTop;
         
@@ -179,9 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // SVG 영역의 너비/높이를 현재 뷰포트와 스크롤 영역을 포함하도록 조정
         const svgWidth = wrapper.scrollWidth;
-        const svgHeight = wrapper.offsetHeight; // 높이는 뷰포트 고정 (세로 스크롤 없음)
+        const svgHeight = wrapper.offsetHeight; 
         connectionLinesSvg.style.width = `${svgWidth}px`;
         connectionLinesSvg.style.height = `${svgHeight}px`;
 
@@ -194,13 +194,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 
                 const scrollLeft = wrapper.scrollLeft;
-                const scrollTop = wrapper.scrollTop; // 현재는 overflow-y: hidden 이므로 0
+                const scrollTop = wrapper.scrollTop; 
 
-                // 시작점: 부모 노드의 절대 좌표 (ABS - SCROLL) = SVG 뷰포트 좌표
+                // SVG 뷰포트 좌표 (절대 좌표 - 스크롤 위치)
                 const startX = parentBox.absX + (conn.parentId === 'logo' ? parentBox.width / 2 : parentBox.width) - scrollLeft;
                 const startY = parentBox.absY + (conn.parentId === 'logo' ? parentBox.height : parentBox.height / 2) - scrollTop;
                 
-                // 끝점: 자식 노드의 절대 좌표 (ABS - SCROLL) = SVG 뷰포트 좌표
                 const endX = childBox.absX - scrollLeft; 
                 const endY = childBox.absY + childBox.height / 2 - scrollTop;
                 
@@ -355,7 +354,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('resize', drawConnections);
-    // 모바일 스크롤 발생 시 선 다시 그리기
     wrapper.addEventListener('scroll', drawConnections); 
     setTimeout(drawConnections, 10);
 });
