@@ -62,17 +62,26 @@ body {
 /* 특정 노드 스타일 */
 #logo-node {
     /* ★수정: transform 제거, width/height 직접 조정하여 크기 고정★ */
-    width: 250px; 
+    width: 20px; 
     height: auto;
-    font-size: 1.2em;
-    font-weight: 900;
+
     border: none;
     box-shadow: none;
     background: none;
     padding: 0; 
     min-width: 0;
     text-align: left; 
+    display: flex;
+    align-items: center; 
+    justify-content: center;
 }
+
+#logo-node img {
+    max-width: 100%; /* 부모 노드(#logo-node) 크기를 초과하지 않음 */
+    max-height: 100%;
+    object-fit: contain; /* 비율 유지하며 컨테이너에 맞춤 */
+}
+
 #intro-node, #issue-1-node {
     font-weight: bold;
 }
@@ -197,3 +206,4 @@ body {
         padding-bottom: 200px; 
     }
 }
+
