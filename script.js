@@ -27,20 +27,33 @@ document.addEventListener('DOMContentLoaded', () => {
     let articleNodes = [];
 
     // ---------------------------------------------
-    // ★최종 수정: 초기 노드 배치 간격 조정★
+    // 초기 노드 배치 구조 설정
     // ---------------------------------------------
     
+    const isMobileView = () => window.innerWidth <= 600;
+    const MOBILE_TOP_OFFSET = 150; // 모바일에서 상단에서 띄울 Y축 오프셋
+    
+    const logoY = isMobileView() ? MOBILE_TOP_OFFSET : 50;
+    
+    // 소개 노드의 X/Y 위치 설정
+    const introY = isMobileView() ? MOBILE_TOP_OFFSET : 50;
+    const introX = isMobileView() ? INITIAL_LEFT + 150 : INITIAL_LEFT + 250; 
+
+    // 1호 노드의 X/Y 위치 설정
+    const issue1Y = isMobileView() ? MOBILE_TOP_OFFSET + 100 : 200;
+    const issue1X = INITIAL_LEFT;
+
     // 로고 노드
     logoNode.style.left = `${INITIAL_LEFT}px`;
-    logoNode.style.top = `50px`; 
+    logoNode.style.top = `${logoY}px`; 
     
-    // 소개 노드 (로고 오른쪽 + 더 넓은 간격: 150px -> 250px)
-    introNode.style.left = `${INITIAL_LEFT + 250}px`; 
-    introNode.style.top = `50px`; 
+    // 소개 노드 
+    introNode.style.left = `${introX}px`; 
+    introNode.style.top = `${introY}px`; 
 
-    // 1호 노드 (로고 아래쪽 + 더 넓은 간격: 150px -> 200px)
-    issue1Node.style.left = `${INITIAL_LEFT}px`;
-    issue1Node.style.top = `200px`; 
+    // 1호 노드 
+    issue1Node.style.left = `${issue1X}px`;
+    issue1Node.style.top = `${issue1Y}px`; 
 
     // ---------------------------------------------
     // 1. 초기 버튼들에 액션 버튼 추가 및 노드 생성 (유지)
@@ -148,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ---------------------------------------------
-    // 3. SVG 연결선 동적 그리기 (유지)
+    // 3. SVG 연결선 동적 그리기 (스크롤 시 재계산)
     // ---------------------------------------------
     
     const getNodeClientPos = (nodeId) => {
@@ -207,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ---------------------------------------------
-    // 4. 액션 버튼 클릭 로직 및 이벤트 리스너 (유지)
+    // 4. 액션 버튼 클릭 및 모달 로직 (유지)
     // ---------------------------------------------
     
     wrapper.addEventListener('click', (e) => {
