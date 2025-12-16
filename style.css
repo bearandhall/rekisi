@@ -6,7 +6,7 @@ body {
     font-family: 'Noto Sans KR', sans-serif;
     color: #333;
     background-color: #f8f8f8;
-    overflow: hidden; /* 전체 페이지 스크롤 방지 */
+    overflow: hidden; 
     height: 100vh;
 }
 
@@ -14,8 +14,8 @@ body {
     position: relative;
     width: 100%;
     height: 100%;
-    overflow-x: auto; /* 가로 스크롤 허용 */
-    overflow-y: hidden; /* 세로 스크롤 방지 */
+    overflow-x: auto; 
+    overflow-y: hidden; 
 }
 
 #connection-lines {
@@ -25,7 +25,7 @@ body {
     width: 100%;
     height: 100%;
     z-index: 20;
-    pointer-events: none; /* SVG가 클릭을 방해하지 않도록 */
+    pointer-events: none; 
 }
 
 #connection-lines path {
@@ -45,9 +45,8 @@ body {
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
     cursor: grab;
     z-index: 30;
-    /* ★수정: 텍스트 크기에 맞게 너비 조절★ */
     width: fit-content; 
-    min-width: 0; /* min-width 제거 */
+    min-width: 0; 
     text-align: center;
 }
 
@@ -57,20 +56,20 @@ body {
 
 /* 특정 노드 스타일 */
 #logo-node {
-    font-size: 3em;
+    /* ★수정: 폰트 크기 축소★ */
+    font-size: 1.5em; 
     font-weight: 900;
     border: none;
     box-shadow: none;
     background: none;
     padding: 0;
     min-width: 0;
-    width: fit-content; /* 로고도 내용물에 맞게 */
+    width: fit-content; 
     height: auto;
-    /* ★수정: 텍스트를 다시 보이게 함★ */
     text-indent: 0; 
-    /* background-image: url('logo_placeholder.svg'); */
-    /* background-size: contain; */
-    /* background-repeat: no-repeat; */
+    
+    /* 로고 노드에만 마진을 추가하여 다른 노드와 약간의 시각적 구분 */
+    padding: 5px;
 }
 #intro-node, #issue-1-node {
     font-weight: bold;
@@ -85,10 +84,9 @@ body {
     font-size: 0.9em;
 }
 
-/* ★액션 버튼 스타일★ */
+/* 액션 버튼 스타일 */
 .node-action-btn {
     position: absolute;
-    /* 노드 오른쪽 아래 바깥으로 이동 */
     bottom: -10px; 
     right: -10px; 
     
@@ -105,7 +103,7 @@ body {
     font-weight: bold;
     color: #333;
     z-index: 50; 
-    box-shadow: 1px 1px 3px rgba(0,0,0,0.2); 
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2); 
 }
 
 .node-action-btn:hover {
@@ -135,6 +133,11 @@ body {
     max-width: 700px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    
+    /* ★수정: 모달 내용이 화면을 넘지 않도록 최대 높이 설정★ */
+    max-height: 80vh; 
+    display: flex;
+    flex-direction: column;
 }
 
 .close-btn {
@@ -156,12 +159,14 @@ body {
     margin-bottom: 5px;
     border-bottom: 2px solid #333;
     padding-bottom: 5px;
+    flex-shrink: 0; /* 제목은 축소되지 않음 */
 }
 
 #modal-article-meta {
     font-size: 0.9em;
     color: #555;
     margin-bottom: 15px;
+    flex-shrink: 0;
 }
 
 #modal-author-intro {
@@ -170,6 +175,14 @@ body {
     padding: 10px;
     background-color: #f0f0f0;
     border-left: 3px solid #ccc;
+    flex-shrink: 0;
+}
+
+/* ★수정: 실제 본문 내용에 스크롤 적용★ */
+#modal-article-body {
+    overflow-y: auto; 
+    padding-right: 15px; /* 스크롤바 때문에 내용이 잘리지 않도록 오른쪽 여백 추가 */
+    flex-grow: 1; /* 남은 공간을 모두 차지 */
 }
 
 #modal-article-body p {
