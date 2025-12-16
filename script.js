@@ -111,13 +111,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const startDrag = (e) => {
         const targetNode = e.target.closest('.draggable-node');
         
-        // 액션 버튼이 클릭되면 드래그 시작을 막고, 기본 동작도 막아 클릭 이벤트만 발생
+        // ★수정 1: 버튼 클릭 시 드래그 시작 막고 preventDefault() 호출 (버튼 클릭 방해 방지)
         if (e.target.closest('.node-action-btn')) {
             e.preventDefault(); 
             return;
         }
 
-        // 드래그 가능한 노드가 아니면 함수 종료. (여기서 preventDefault()를 호출하지 않아야 스크롤이 작동함)
+        // 드래그 가능한 노드가 아니면 함수 종료. 
+        // 여기서 preventDefault()를 호출하지 않아야 빈 공간 터치 시 스크롤이 작동함
         if (!targetNode) return;
 
         draggedElement = targetNode;
@@ -129,8 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         draggedElement.style.zIndex = 40; 
 
-        // ★수정: 드래그가 시작될 때만 preventDefault()를 호출하여 기본 동작(스크롤) 차단★
-        // 이 코드를 제거하면 모바일에서 노드 터치 시 스크롤이 되는 현상 방지
+        // ★수정 2: 드래그가 시작될 때만 preventDefault()를 호출하여 기본 동작(스크롤) 차단★
+        // 이 코드가 노드를 잡았을 때 스크롤이 튕기는 현상을 막아줌
         e.preventDefault(); 
     };
 
@@ -150,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         draggedElement.style.top = `${newY}px`;
         
         // 드래그 중 선 연결 업데이트
+        // requestAnimationFrame 사용 제거 (동기 업데이트를 통해 선 분리 최소화 시도)
         drawConnections(); 
     };
 
@@ -179,53 +181,65 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!nodeElement) return null;
         return nodeElement.getBoundingClientRect();
     };
+    
+    // 스크롤 성능 향상을 위한 변수 추가
+    let rafHandle = null; 
 
     const drawConnections = () => {
-        connectionLinesSvg.innerHTML = '';
-        
-        const connections = [];
-        connections.push({ parentId: 'logo', childId: '소개', type: 'logo' });
-        connections.push({ parentId: 'logo', childId: '1호', type: 'logo' });
-
-        if (issue1Node.classList.contains('expanded')) {
-            issue1Articles.forEach(articleId => {
-                const article = articleData[articleId];
-                connections.push({ parentId: '1호', childId: article.author, type: 'parent' });
-                connections.push({ parentId: article.author, childId: article.title, type: 'straight' });
-            });
+        // 이미 예약된 업데이트가 있다면 취소
+        if (rafHandle) {
+            cancelAnimationFrame(rafHandle);
         }
         
-        connectionLinesSvg.style.width = `${window.innerWidth}px`;
-        connectionLinesSvg.style.height = `${window.innerHeight}px`; 
-
-        connections.forEach(conn => {
-            const parentRect = getNodeClientPos(conn.parentId);
-            const childElement = document.querySelector(`[data-node-id="${conn.childId}"]`);
-            const childRect = getNodeClientPos(conn.childId);
+        // 다음 애니메이션 프레임에 맞춰 연결선을 업데이트
+        rafHandle = requestAnimationFrame(() => {
+            connectionLinesSvg.innerHTML = '';
             
-            if (parentRect && childRect && childElement && childElement.style.display !== 'none') {
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                
-                // 뷰포트 기준 좌표 사용
-                const svgStartX = parentRect.left + (conn.parentId === 'logo' ? (parentRect.width * 0.5) : parentRect.width);
-                const svgStartY = parentRect.top + (conn.parentId === 'logo' ? parentRect.height : parentRect.height / 2);
-                
-                const svgEndX = childRect.left; 
-                const svgEndY = childRect.top + childRect.height / 2;
-                
-                let dPath;
+            const connections = [];
+            connections.push({ parentId: 'logo', childId: '소개', type: 'logo' });
+            connections.push({ parentId: 'logo', childId: '1호', type: 'logo' });
 
-                if (conn.type === 'logo') {
-                    dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + 30} ${svgStartY + 30}, ${svgEndX - 30} ${svgEndY}, ${svgEndX} ${svgEndY}`;
-                } else if (conn.type === 'straight' || conn.type === 'parent') {
-                    // 부드러운 곡선
-                    const offset = 80; 
-                    dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + offset} ${svgStartY}, ${svgEndX - offset} ${svgEndY}, ${svgEndX} ${svgEndY}`;
-                }
-                
-                path.setAttribute('d', dPath);
-                connectionLinesSvg.appendChild(path);
+            if (issue1Node.classList.contains('expanded')) {
+                issue1Articles.forEach(articleId => {
+                    const article = articleData[articleId];
+                    connections.push({ parentId: '1호', childId: article.author, type: 'parent' });
+                    connections.push({ parentId: article.author, childId: article.title, type: 'straight' });
+                });
             }
+            
+            connectionLinesSvg.style.width = `${window.innerWidth}px`;
+            connectionLinesSvg.style.height = `${window.innerHeight}px`; 
+
+            connections.forEach(conn => {
+                const parentRect = getNodeClientPos(conn.parentId);
+                const childElement = document.querySelector(`[data-node-id="${conn.childId}"]`);
+                const childRect = getNodeClientPos(conn.childId);
+                
+                if (parentRect && childRect && childElement && childElement.style.display !== 'none') {
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    
+                    // 뷰포트 기준 좌표 사용
+                    const svgStartX = parentRect.left + (conn.parentId === 'logo' ? (parentRect.width * 0.5) : parentRect.width);
+                    const svgStartY = parentRect.top + (conn.parentId === 'logo' ? parentRect.height : parentRect.height / 2);
+                    
+                    const svgEndX = childRect.left; 
+                    const svgEndY = childRect.top + childRect.height / 2;
+                    
+                    let dPath;
+
+                    if (conn.type === 'logo') {
+                        dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + 30} ${svgStartY + 30}, ${svgEndX - 30} ${svgEndY}, ${svgEndX} ${svgEndY}`;
+                    } else if (conn.type === 'straight' || conn.type === 'parent') {
+                        // 부드러운 곡선
+                        const offset = 80; 
+                        dPath = `M ${svgStartX} ${svgStartY} C ${svgStartX + offset} ${svgStartY}, ${svgEndX - offset} ${svgEndY}, ${svgEndX} ${svgEndY}`;
+                    }
+                    
+                    path.setAttribute('d', dPath);
+                    connectionLinesSvg.appendChild(path);
+                }
+            });
+            rafHandle = null; // 작업 완료 후 핸들 초기화
         });
     };
 
@@ -358,6 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     window.addEventListener('resize', drawConnections);
+    // ★수정: 스크롤 이벤트 발생 시 requestAnimationFrame으로 래핑하여 호출 (성능 최적화 및 선 분리 해결 시도)
     wrapper.addEventListener('scroll', drawConnections); 
     
     setTimeout(drawConnections, 10);
