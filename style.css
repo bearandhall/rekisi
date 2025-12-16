@@ -73,7 +73,7 @@ body {
     text-indent: 0; 
     
     /* 로고 크기: scale(0.24) 적용 */
-    transform: scale(0.5); 
+    transform: scale(0.2); 
     transform-origin: top left; 
 }
 #intro-node, #issue-1-node {
@@ -201,4 +201,5 @@ body {
         padding-bottom: 200px; 
     }
 }
+
 
