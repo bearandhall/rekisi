@@ -1,15 +1,16 @@
 /* style.css */
 
-/* 1. 모든 폰트 Orbitron 적용 (한국어는 Noto Sans KR) */
-body, button, input, textarea, .draggable-node, .modal-content {
-    font-family: 'Orbitron', 'Noto Sans KR', sans-serif;
+/* 모든 요소에 Orbitron 강제 적용 */
+* {
+    font-family: 'Orbitron', sans-serif !important;
+    letter-spacing: 0.05em;
 }
 
 body {
     margin: 0;
     padding: 0;
-    color: #333;
-    background-color: #f8f8f8;
+    color: #000;
+    background-color: #f0f0f0;
     overflow: hidden; 
     height: 100vh;
     width: 100vw;
@@ -33,126 +34,103 @@ body {
 
 #connection-lines path {
     fill: none;
-    stroke: #333;
-    stroke-width: 2;
+    stroke: #000;
+    stroke-width: 1.5;
 }
 
-/* 저자 -> 글 제목 전용 점선 스타일 */
+/* 저자 -> 글 제목 점선 */
 #connection-lines path.line-straight {
-    stroke: #aaa;
-    stroke-width: 1.5;
+    stroke: #888;
     stroke-dasharray: 4, 4;
 }
 
 .draggable-node {
     position: absolute;
-    padding: 6px 12px;
+    padding: 8px 15px;
     background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    border: 1.5px solid #000;
+    border-radius: 0px; /* 좀 더 테크니컬한 느낌을 위해 사각형으로 변경 */
+    box-shadow: 4px 4px 0px #000;
     cursor: grab;
     z-index: 30;
     width: fit-content;
     white-space: nowrap;
-    font-size: 0.85em;
+    font-size: 0.9em;
+    font-weight: 700;
     user-select: none;
     touch-action: none;
 }
 
-/* ★ 1. 로고 노드 70px 고정 ★ */
+/* ★ 로고 70px 고정 ★ */
 #logo-node {
-    width: 70px; 
+    width: 70px !important;
     height: auto;
     border: none;
     box-shadow: none;
     background: none;
     padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 #logo-node img {
     width: 100%;
     height: auto;
     display: block;
-    pointer-events: none;
 }
 
-#intro-node, #issue-1-node { font-weight: bold; }
-.node-author { background-color: #e6f7ff; }
-.node-title { background-color: #fff0e6; font-size: 0.8em; }
+.node-author { background-color: #e0e0e0; }
+.node-title { background-color: #fff; font-size: 0.8em; }
 
+/* 버튼 스타일 및 클릭 영역 확보 */
 .node-action-btn {
     position: absolute;
-    bottom: -8px;
-    right: -8px;
-    width: 22px;
-    height: 22px;
-    background-color: #ffffff;
-    border: 1px solid #333;
-    border-radius: 4px;
+    bottom: -12px;
+    right: -12px;
+    width: 28px;
+    height: 28px;
+    background-color: #000;
+    color: #fff;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     font-size: 10px;
-    font-weight: bold;
-    z-index: 50;
-    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    z-index: 60;
+    border: 1px solid #000;
 }
 
-/* ★ 2. 팝업 모달 전체 화면 설정 ★ */
+/* ★ 전체 화면 모달 ★ */
 #article-modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 2000;
     left: 0;
     top: 0;
     width: 100vw;
     height: 100vh;
-    background-color: #fff; /* 전체 화면이므로 배경을 흰색으로 고정 */
+    background-color: #fff;
 }
 
 .modal-content {
-    background-color: #fff;
     width: 100%;
     height: 100%;
-    margin: 0;
-    padding: 50px 20px 20px 20px; /* 닫기 버튼 자리를 위해 상단 패딩 */
+    padding: 80px 30px 40px 30px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    position: relative;
-    border-radius: 0; /* 둥근 모서리 제거 */
+    overflow: hidden;
 }
 
 .close-btn {
     position: absolute;
-    top: 15px;
-    right: 25px;
-    font-size: 35px;
-    font-weight: bold;
+    top: 20px;
+    right: 30px;
+    font-size: 40px;
     cursor: pointer;
-    color: #333;
-    z-index: 1001;
+    color: #000;
 }
 
-#modal-article-title { 
-    font-size: 1.8em; 
-    margin: 0 0 10px 0; 
-    border-bottom: 2px solid #333; 
-    padding-bottom: 10px;
-    word-break: keep-all;
-}
-
-#modal-article-meta { font-size: 1em; color: #666; margin-bottom: 15px; }
-#modal-author-intro { font-style: italic; padding: 15px; background: #f4f4f4; border-left: 5px solid #333; margin-bottom: 20px; font-size: 0.95em; }
-#modal-article-body { 
-    overflow-y: auto; 
-    line-height: 1.8; 
-    flex-grow: 1; 
-    font-size: 1.1em;
-}
-#modal-article-body p { margin-bottom: 20px; text-align: justify; }
+#modal-article-title { font-size: 2.2em; font-weight: 900; margin: 0 0 15px 0; border-bottom: 4px solid #000; padding-bottom: 10px; text-transform: uppercase; }
+#modal-article-meta { font-size: 1.1em; margin-bottom: 20px; font-weight: 700; }
+#modal-author-intro { padding: 20px; background: #eee; border: 1px solid #000; margin-bottom: 25px; font-size: 1em; }
+#modal-article-body { overflow-y: auto; line-height: 1.8; flex-grow: 1; font-size: 1.2em; padding-right: 10px; }
+#modal-article-body p { margin-bottom: 25px; }
