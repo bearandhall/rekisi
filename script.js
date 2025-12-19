@@ -20,24 +20,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const articleData = window.articleData || {};
     const issue1Articles = Object.keys(articleData).filter(id => id !== 'intro_rekisi');
 
-    // 배치 간격
-    const HORIZONTAL_OFFSET = 200;
-    const AUTHOR_TITLE_OFFSET = 160;
-    const VERTICAL_SPACING = 70;
+    const HORIZONTAL_OFFSET = 180;
+    const AUTHOR_TITLE_OFFSET = 150;
+    const VERTICAL_SPACING = 60;
 
-    // 초기화
     const init = () => {
         const isMobile = window.innerWidth <= 600;
-        const baseTop = isMobile ? 150 : 80;
+        const baseTop = isMobile ? 130 : 60;
 
-        logoNode.style.left = '60px';
+        logoNode.style.left = '50px';
         logoNode.style.top = `${baseTop}px`;
-        
-        introNode.style.left = `${isMobile ? 180 : 280}px`;
-        introNode.style.top = `${baseTop + 10}px`;
-        
-        issue1Node.style.left = '60px';
-        issue1Node.style.top = `${baseTop + 150}px`;
+        introNode.style.left = `${isMobile ? 180 : 250}px`;
+        introNode.style.top = `${baseTop + 15}px`;
+        issue1Node.style.left = '50px';
+        issue1Node.style.top = `${baseTop + 130}px`;
 
         addBtn(introNode, 'intro');
         addBtn(issue1Node, 'toggle');
@@ -69,15 +65,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = document.createElement('div');
         btn.className = 'node-action-btn';
         btn.dataset.actionType = type;
-        btn.innerHTML = type === 'toggle' ? 'LIST' : 'VIEW';
+        btn.innerHTML = type === 'toggle' ? '목록' : '열기';
         node.appendChild(btn);
     }
 
-    // 드래그 로직 (이벤트 간섭 제거)
+    // 드래그 로직 (버튼 클릭 간섭 해결)
     const getC = (e) => e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
 
     const startDrag = (e) => {
-        // 버튼 클릭 시 드래그가 시작되지 않도록 철저히 방어
+        // ★ 중요: 클릭한 대상이 버튼이면 드래그 로직을 아예 실행하지 않음 ★
         if (e.target.closest('.node-action-btn')) return;
 
         const node = e.target.closest('.draggable-node');
@@ -90,8 +86,8 @@ document.addEventListener('DOMContentLoaded', () => {
         offsetY = c.y - rect.top;
         draggedElement.style.zIndex = 100;
         
-        // 데스크탑에서 텍스트 선택 방지용으로만 사용 (모바일은 touch-action: none으로 해결)
-        if (e.type === 'mousedown') e.preventDefault();
+        // 드래그 시에만 기본 동작 방지 (버튼 클릭 시엔 방지 안함)
+        if (e.cancelable) e.preventDefault(); 
     };
 
     const doDrag = (e) => {
@@ -107,11 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
     wrapper.addEventListener('mousedown', startDrag);
     window.addEventListener('mousemove', doDrag);
     window.addEventListener('mouseup', stopDrag);
-    wrapper.addEventListener('touchstart', startDrag, { passive: true }); // 버튼 클릭을 위해 passive: true
+    wrapper.addEventListener('touchstart', startDrag, { passive: true }); // 버튼 클릭을 허용하기 위해 passive: true
     window.addEventListener('touchmove', doDrag, { passive: false });
     window.addEventListener('touchend', stopDrag);
 
-    // 선 그리기
     const getP = (id) => {
         const el = document.querySelector(`[data-node-id="${id}"]`);
         if (!el || el.style.display === 'none') return null;
@@ -137,21 +132,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (conn.type === 'straight') path.setAttribute('class', 'line-straight');
                     const sX = p.x + (conn.type === 'logo' ? p.w/2 : p.w), sY = p.y + (conn.type === 'logo' ? p.h : p.h/2);
                     const eX = c.x, eY = c.y + c.h/2;
-                    path.setAttribute('d', `M ${sX} ${sY} C ${sX + (conn.type==='logo'?40:80)} ${sY}, ${eX - (conn.type==='logo'?40:80)} ${eY}, ${eX} ${eY}`);
+                    path.setAttribute('d', `M ${sX} ${sY} C ${sX + (conn.type==='logo'?40:70)} ${sY}, ${eX - (conn.type==='logo'?40:70)} ${eY}, ${eX} ${eY}`);
                     connectionLinesSvg.appendChild(path);
                 }
             });
         });
     };
 
-    // 클릭 핸들러 (이벤트 위임 최적화)
+    // 클릭 이벤트 (토글 및 모달 정상 작동)
     wrapper.addEventListener('click', (e) => {
         const btn = e.target.closest('.node-action-btn');
         if (!btn) return;
         
-        e.preventDefault();
         e.stopPropagation();
-        
         const node = btn.closest('.draggable-node');
         const action = btn.dataset.actionType;
 
@@ -167,30 +160,29 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(draw, 50);
         } else if (action === 'intro') {
             const d = articleData['intro_rekisi'];
-            show(d.title, "EDITORIAL", null, d.content);
+            show(d.title, "REKISI 편집부", null, d.content);
         } else if (action === 'article-modal') {
             const d = articleData[node.dataset.articleId];
             show(d.title, d.author, d.author_intro, d.content);
         } else if (action === 'author-modal') {
             const name = node.dataset.nodeId;
             const d = Object.values(articleData).find(a => a.author === name);
-            show(`AUTHOR: ${name}`, null, d ? d.author_intro : "BIOGRAPHY NOT FOUND.", []);
+            show(`저자: ${name}`, null, d ? d.author_intro : "등록된 소개가 없습니다.", []);
         }
     });
 
     const show = (t, m, i, b) => {
         modalTitle.textContent = t;
         modalMeta.textContent = m || "";
-        modalAuthorIntro.innerHTML = i ? `<strong>ABOUT AUTHOR:</strong> ${i}` : "";
+        modalAuthorIntro.innerHTML = i ? `<strong>저자 소개:</strong> ${i}` : "";
         modalAuthorIntro.style.display = i ? "block" : "none";
         modalBody.innerHTML = b.map(p => `<p>${p}</p>`).join('');
         modal.style.display = 'block';
     };
 
     closeBtn.onclick = () => modal.style.display = 'none';
-
     init();
     window.addEventListener('resize', draw);
     wrapper.addEventListener('scroll', draw);
-    setTimeout(draw, 500);
+    setTimeout(draw, 300);
 });
