@@ -1,16 +1,15 @@
-/* Orbitron 폰트 강제 적용 (노토 산스 제거) */
+/* Orbitron 폰트만 사용 */
 * {
     font-family: 'Orbitron', sans-serif !important;
+    box-sizing: border-box;
 }
 
 body {
     margin: 0;
     padding: 0;
-    color: #333;
     background-color: #f8f8f8;
     overflow: hidden; 
     height: 100vh;
-    width: 100vw;
 }
 
 #wrapper {
@@ -22,9 +21,8 @@ body {
 
 #connection-lines {
     position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 20;
+    top: 0; left: 0;
+    z-index: 10;
     pointer-events: none;
 }
 
@@ -36,7 +34,6 @@ body {
 
 #connection-lines path.line-straight {
     stroke: #aaa;
-    stroke-width: 1.5;
     stroke-dasharray: 4, 4;
 }
 
@@ -49,53 +46,40 @@ body {
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
     cursor: grab;
     z-index: 30;
-    width: fit-content;
     white-space: nowrap;
     font-size: 0.85em;
     user-select: none;
-    touch-action: none;
 }
 
-/* 로고 70px 고정 */
 #logo-node {
     width: 70px !important;
-    height: auto;
-    border: none;
-    box-shadow: none;
-    background: none;
-    padding: 0;
+    border: none; box-shadow: none; background: none; padding: 0;
 }
 
 #logo-node img {
-    width: 100%;
-    height: auto;
-    display: block;
-    pointer-events: none;
+    width: 100%; height: auto; pointer-events: none;
 }
 
 #intro-node, #issue-1-node { font-weight: bold; }
 .node-author { background-color: #e6f7ff; }
 .node-title { background-color: #fff0e6; font-size: 0.8em; }
 
-/* 토글 버튼: 글자를 가리지 않게 블록 오른쪽 옆에 배치 */
+/* ★ 버튼: 블록 오른쪽 옆에 빈틈없이 딱 붙임 ★ */
 .node-action-btn {
     position: absolute;
-    left: 100%; /* 블록 끝에서 시작 */
-    top: 0;
-    margin-left: 5px; /* 블록과 약간의 간격 */
-    width: 22px;
-    height: 22px;
+    left: 100%; /* 블록의 끝 지점 */
+    top: -1px; /* 블록 테두리와 정렬 */
+    width: 24px;
+    height: 24px;
     background-color: #fff;
-    border: 1px solid #333;
+    border: 1px solid #ccc; /* 블록과 동일한 테두리 색상 */
     border-radius: 3px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     font-size: 10px;
-    font-weight: bold;
     z-index: 100;
-    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* 전체 화면 모달 */
@@ -103,35 +87,25 @@ body {
     display: none;
     position: fixed;
     z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100vw;
-    height: 100vh;
+    left: 0; top: 0;
+    width: 100vw; height: 100vh;
     background-color: #fff;
 }
 
 .modal-content {
-    width: 100%;
-    height: 100%;
-    padding: 60px 25px 30px 25px; 
-    box-sizing: border-box;
+    width: 100%; height: 100%;
+    padding: 60px 25px;
     display: flex;
     flex-direction: column;
-    position: relative;
 }
 
 .close-btn {
     position: absolute;
-    top: 15px;
-    right: 25px;
-    font-size: 40px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #333;
+    top: 15px; right: 25px;
+    font-size: 40px; cursor: pointer;
 }
 
-#modal-article-title { font-size: 1.8em; margin: 0 0 10px 0; border-bottom: 2px solid #333; padding-bottom: 10px; }
-#modal-article-meta { font-size: 1em; color: #666; margin-bottom: 15px; }
-#modal-author-intro { font-style: italic; padding: 15px; background: #f9f9f9; border-left: 5px solid #ddd; margin-bottom: 20px; }
-#modal-article-body { overflow-y: auto; line-height: 1.8; flex-grow: 1; font-size: 1.1em; }
-#modal-article-body p { margin-bottom: 20px; text-align: justify; }
+#modal-article-title { font-size: 1.8em; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 10px;}
+#modal-article-meta { color: #666; margin-bottom: 15px; }
+#modal-author-intro { padding: 15px; background: #f9f9f9; border-left: 5px solid #ddd; margin-bottom: 20px; font-style: italic; }
+#modal-article-body { overflow-y: auto; line-height: 1.8; flex-grow: 1; }
