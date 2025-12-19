@@ -56,7 +56,7 @@ body {
 }
 
 #logo-node {
-    width: 200px; /* 원하는 크기로 조절 */
+    width: 80px; /* 원하는 크기로 조절 */
     height: auto;
     border: none;
     box-shadow: none;
@@ -101,3 +101,4 @@ body {
 .modal-content { background-color: #fff; margin: 10% auto; padding: 20px; width: 80%; max-width: 700px; border-radius: 8px; max-height: 80vh; display: flex; flex-direction: column; }
 .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
 #modal-article-body { overflow-y: auto; flex-grow: 1; }
+
