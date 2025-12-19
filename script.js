@@ -11,11 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let offset = { x: 0, y: 0 };
     let nodesList = [];
 
+    // 사용자님의 소중한 데이터 (반드시 유지)
     const data = window.articleData || {};
     const articles = Object.keys(data).filter(id => id !== 'intro_rekisi');
 
     const init = () => {
-        // 초기 위치 설정
         logo.style.left = '50px'; logo.style.top = '60px';
         intro.style.left = '250px'; intro.style.top = '75px';
         issue1.style.left = '50px'; issue1.style.top = '190px';
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         articles.forEach((id) => {
             const item = data[id];
-            const a = createNode(item.author, 'node-author', item.author, 'author-modal');
+            const a = createNode(item.author, 'node-author', item.author, 'author-modal', id);
             const t = createNode(item.title, 'node-title', item.title, 'article-modal', id);
             issue1Children.appendChild(a);
             issue1Children.appendChild(t);
@@ -50,13 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.className = 'node-action-btn';
         btn.innerHTML = '&#x25A1;';
         
-        // ★ mousedown 전파 차단: 드래그 로직이 실행되지 않도록 함 ★
         btn.onmousedown = (e) => e.stopPropagation();
         btn.ontouchstart = (e) => e.stopPropagation();
 
         btn.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+            e.preventDefault(); e.stopPropagation();
+            
             if (type === 'toggle') {
                 const isExp = parent.classList.toggle('expanded');
                 nodesList.forEach((n, i) => {
@@ -72,17 +71,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 showModal(d.title, "REKISI 편집부", null, d.content);
             } else if (type === 'article-modal') {
                 const d = data[parent.dataset.articleId];
-                showModal(d.title, d.author, d.author_intro, d.content);
+                // ★ 수정: "글 제목" 클릭 시 저자소개(i) 자리에 null 전달
+                showModal(d.title, d.author, null, d.content);
             } else if (type === 'author-modal') {
                 const name = parent.dataset.nodeId;
                 const d = Object.values(data).find(v => v.author === name);
-                showModal(`저자: ${name}`, null, d ? d.author_intro : "", []);
+                // ★ 수정: "저자명" 클릭 시 본문(b) 자리에 빈 배열 전달
+                showModal(`저자: ${name}`, "Author Information", d ? d.author_intro : "", []);
             }
             draw();
         };
         parent.appendChild(btn);
     }
 
+    // 드래그 및 선 그리기 로직 (기존과 동일)
     const start = (e) => {
         const node = e.target.closest('.draggable-node');
         if (!node || e.target.closest('.node-action-btn')) return;
@@ -91,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
         offset = { x: c.clientX - node.offsetLeft, y: c.clientY - node.offsetTop };
         node.style.zIndex = 1000;
     };
-
     const move = (e) => {
         if (!dragged) return;
         const c = e.touches ? e.touches[0] : e;
@@ -99,7 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dragged.style.top = `${c.clientY - offset.y}px`;
         draw();
     };
-
     const end = () => { if (dragged) dragged.style.zIndex = 30; dragged = null; };
 
     wrapper.addEventListener('mousedown', start);
@@ -113,20 +113,17 @@ document.addEventListener('DOMContentLoaded', () => {
         linesSvg.innerHTML = '';
         linesSvg.style.width = `${wrapper.scrollWidth}px`;
         linesSvg.style.height = `${wrapper.scrollHeight}px`;
-
         const getP = (id) => {
             const el = document.querySelector(`[data-node-id="${id}"]`);
             if (!el || el.style.display === 'none') return null;
             return { x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight };
         };
-
         const conns = [{p:'logo', c:'소개', t:'logo'}, {p:'logo', c:'1호', t:'logo'}];
         if (issue1.classList.contains('expanded')) {
             articles.forEach(id => {
                 conns.push({p:'1호', c:data[id].author, t:'p'}, {p:data[id].author, c:data[id].title, t:'s'});
             });
         }
-
         conns.forEach(conn => {
             const p = getP(conn.p), c = getP(conn.c);
             if (p && c) {
@@ -144,10 +141,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-article-title').textContent = t;
         document.getElementById('modal-article-meta').textContent = m || "";
         const introBox = document.getElementById('modal-author-intro');
+        
+        // 저자 소개가 있을 때만 박스 표시
         introBox.innerHTML = i ? `<strong>저자 소개:</strong> ${i}` : "";
         introBox.style.display = i ? "block" : "none";
+        
+        // 본문 출력
         document.getElementById('modal-article-body').innerHTML = (b || []).map(p => `<p>${p}</p>`).join('');
         modal.style.display = 'block';
+        document.getElementById('article-modal').scrollTop = 0; // 모달 열 때 스크롤 맨 위로
     };
 
     document.querySelector('.close-btn').onclick = () => modal.style.display = 'none';
