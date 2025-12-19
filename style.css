@@ -1,4 +1,4 @@
-/* 모든 요소에 Orbitron 및 한국어 폰트 적용 */
+/* 모든 텍스트에 Orbitron 및 Noto Sans KR 적용 */
 * {
     font-family: 'Orbitron', 'Noto Sans KR', sans-serif;
 }
@@ -35,14 +35,14 @@ body {
     stroke-width: 2;
 }
 
-/* 저자 -> 글 제목 점선 스타일 */
+/* 저자 -> 글 제목 점선 */
 #connection-lines path.line-straight {
     stroke: #aaa;
     stroke-width: 1.5;
     stroke-dasharray: 4, 4;
 }
 
-/* 블록 스타일 (원래의 부드러운 스타일로 복구) */
+/* 블록 원래 스타일 복구 */
 .draggable-node {
     position: absolute;
     padding: 6px 12px;
@@ -80,7 +80,7 @@ body {
 .node-author { background-color: #e6f7ff; }
 .node-title { background-color: #fff0e6; font-size: 0.8em; }
 
-/* 버튼 스타일 */
+/* 토글 버튼: 작은 네모(□) 형태 유지 */
 .node-action-btn {
     position: absolute;
     bottom: -10px;
@@ -96,11 +96,11 @@ body {
     cursor: pointer;
     font-size: 10px;
     font-weight: bold;
-    z-index: 100; /* 드래그보다 우선순위 높임 */
+    z-index: 100;
     box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* 전체 화면 모달 */
+/* 전체 화면 모달 설정 */
 #article-modal {
     display: none;
     position: fixed;
