@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             } else if (type === 'intro') {
                 const d = data['intro_rekisi'];
-                showModal(d.title, "REKISI 편집부", null, d.content);
+                showModal(d.title, "REKISI", null, d.content);
             } else if (type === 'article-modal') {
                 const d = data[parent.dataset.articleId];
                 // ★ 수정: "글 제목" 클릭 시 저자소개(i) 자리에 null 전달
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const name = parent.dataset.nodeId;
                 const d = Object.values(data).find(v => v.author === name);
                 // ★ 수정: "저자명" 클릭 시 본문(b) 자리에 빈 배열 전달
-                showModal(`저자: ${name}`, "Author Information", d ? d.author_intro : "", []);
+                showModal(`${name}`, d ? d.author_intro : "", []);
             }
             draw();
         };
@@ -155,3 +155,4 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.close-btn').onclick = () => modal.style.display = 'none';
     init();
 });
+
