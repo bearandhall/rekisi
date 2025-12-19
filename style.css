@@ -1,7 +1,14 @@
 /* Orbitron 폰트만 사용 */
 * {
-    font-family: 'Orbitron', sans-serif !important;
+    font-family: 'Orbit', sans-serif !important;
     box-sizing: border-box;
+}
+
+@font-face {
+    font-family: 'Orbit';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2310@1.0/Orbit-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
 }
 
 body {
@@ -109,3 +116,4 @@ body {
 #modal-article-meta { color: #666; margin-bottom: 15px; }
 #modal-author-intro { padding: 15px; background: #f9f9f9; border-left: 5px solid #ddd; margin-bottom: 20px; font-style: italic; }
 #modal-article-body { overflow-y: auto; line-height: 1.8; flex-grow: 1; }
+
