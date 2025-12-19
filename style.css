@@ -1,6 +1,6 @@
-/* 모든 텍스트에 Orbitron 및 Noto Sans KR 적용 */
+/* Orbitron 폰트 강제 적용 (노토 산스 제거) */
 * {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Orbitron', sans-serif !important;
 }
 
 body {
@@ -18,7 +18,6 @@ body {
     width: 100%;
     height: 100%;
     overflow: auto;
-    -webkit-overflow-scrolling: touch;
 }
 
 #connection-lines {
@@ -35,14 +34,12 @@ body {
     stroke-width: 2;
 }
 
-/* 저자 -> 글 제목 점선 */
 #connection-lines path.line-straight {
     stroke: #aaa;
     stroke-width: 1.5;
     stroke-dasharray: 4, 4;
 }
 
-/* 블록 원래 스타일 복구 */
 .draggable-node {
     position: absolute;
     padding: 6px 12px;
@@ -80,13 +77,14 @@ body {
 .node-author { background-color: #e6f7ff; }
 .node-title { background-color: #fff0e6; font-size: 0.8em; }
 
-/* 토글 버튼: 작은 네모(□) 형태 유지 */
+/* 토글 버튼: 글자를 가리지 않게 블록 오른쪽 옆에 배치 */
 .node-action-btn {
     position: absolute;
-    bottom: -10px;
-    right: -10px;
-    width: 24px;
-    height: 24px;
+    left: 100%; /* 블록 끝에서 시작 */
+    top: 0;
+    margin-left: 5px; /* 블록과 약간의 간격 */
+    width: 22px;
+    height: 22px;
     background-color: #fff;
     border: 1px solid #333;
     border-radius: 3px;
@@ -97,10 +95,10 @@ body {
     font-size: 10px;
     font-weight: bold;
     z-index: 100;
-    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* 전체 화면 모달 설정 */
+/* 전체 화면 모달 */
 #article-modal {
     display: none;
     position: fixed;
@@ -137,4 +135,3 @@ body {
 #modal-author-intro { font-style: italic; padding: 15px; background: #f9f9f9; border-left: 5px solid #ddd; margin-bottom: 20px; }
 #modal-article-body { overflow-y: auto; line-height: 1.8; flex-grow: 1; font-size: 1.1em; }
 #modal-article-body p { margin-bottom: 20px; text-align: justify; }
-
