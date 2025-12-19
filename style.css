@@ -90,3 +90,16 @@ body { margin: 0; padding: 0; background-color: #f8f8f8; overflow: hidden; heigh
 
 #modal-article-body { line-height: 1.8; font-size: 1.1em; }
 #modal-article-body img { max-width: 100%; height: auto; display: block; margin: 20px auto; }
+
+#article-modal {
+    scroll-behavior: smooth; /* 부드러운 이동 효과 */
+}
+
+/* 각주 번호 스타일 (선택 사항) */
+sup a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    margin-left: 2px;
+}
+
