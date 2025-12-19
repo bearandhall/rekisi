@@ -1,4 +1,4 @@
-/* Orbitron 폰트만 사용 */
+/* Orbit 폰트 및 기본 설정 */
 * {
     font-family: 'Orbit', sans-serif !important;
     box-sizing: border-box;
@@ -11,38 +11,13 @@
     font-display: swap;
 }
 
-body {
-    margin: 0;
-    padding: 0;
-    background-color: #f8f8f8;
-    overflow: hidden; 
-    height: 100vh;
-}
+body { margin: 0; padding: 0; background-color: #f8f8f8; overflow: hidden; height: 100vh; }
+#wrapper { position: relative; width: 100%; height: 100%; overflow: auto; }
 
-#wrapper {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-}
-
-#connection-lines {
-    position: absolute;
-    top: 0; left: 0;
-    z-index: 10;
-    pointer-events: none;
-}
-
-#connection-lines path {
-    fill: none;
-    stroke: #333;
-    stroke-width: 2;
-}
-
-#connection-lines path.line-straight {
-    stroke: #aaa;
-    stroke-dasharray: 4, 4;
-}
+/* 연결선 및 노드 스타일 (기존과 동일) */
+#connection-lines { position: absolute; top: 0; left: 0; z-index: 10; pointer-events: none; }
+#connection-lines path { fill: none; stroke: #333; stroke-width: 2; }
+#connection-lines path.line-straight { stroke: #aaa; stroke-dasharray: 4, 4; }
 
 .draggable-node {
     position: absolute;
@@ -58,38 +33,21 @@ body {
     user-select: none;
 }
 
-#logo-node {
-    width: 70px !important;
-    border: none; box-shadow: none; background: none; padding: 0;
-}
-
-#logo-node img {
-    width: 100%; height: auto; pointer-events: none;
-}
-
+#logo-node { width: 70px !important; border: none; box-shadow: none; background: none; padding: 0; }
+#logo-node img { width: 100%; height: auto; pointer-events: none; }
 #intro-node, #issue-1-node { font-weight: bold; }
 .node-author { background-color: #e6f7ff; }
 .node-title { background-color: #fff0e6; font-size: 0.8em; }
 
-/* ★ 버튼: 블록 오른쪽 옆에 빈틈없이 딱 붙임 ★ */
 .node-action-btn {
-    position: absolute;
-    left: 100%; /* 블록의 끝 지점 */
-    top: -1px; /* 블록 테두리와 정렬 */
-    width: 24px;
-    height: 24px;
-    background-color: #fff;
-    border: 1px solid #ccc; /* 블록과 동일한 테두리 색상 */
-    border-radius: 3px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    font-size: 10px;
-    z-index: 100;
+    position: absolute; left: 100%; top: -1px;
+    width: 24px; height: 24px;
+    background-color: #fff; border: 1px solid #ccc;
+    border-radius: 3px; display: flex; justify-content: center; align-items: center;
+    cursor: pointer; font-size: 10px; z-index: 100;
 }
 
-/* 전체 화면 모달 */
+/* ★ 수정: 전체 화면 모달 (상단 고정 해제) ★ */
 #article-modal {
     display: none;
     position: fixed;
@@ -97,23 +55,38 @@ body {
     left: 0; top: 0;
     width: 100vw; height: 100vh;
     background-color: #fff;
+    overflow-y: auto; /* 전체 스크롤 가능하게 */
 }
 
 .modal-content {
-    width: 100%; height: 100%;
-    padding: 60px 25px;
-    display: flex;
-    flex-direction: column;
+    width: 100%;
+    max-width: 850px; /* 읽기 편한 너비 */
+    margin: 0 auto;
+    padding: 80px 25px 50px 25px;
+    display: block; /* flex 해제하여 본문 흐름대로 스크롤 */
 }
 
 .close-btn {
-    position: absolute;
+    position: fixed; /* 닫기 버튼은 화면 우측 상단 고정 */
     top: 15px; right: 25px;
     font-size: 40px; cursor: pointer;
+    z-index: 1100;
 }
 
-#modal-article-title { font-size: 1.8em; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 10px;}
+#modal-article-title { font-size: 2em; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 10px; }
 #modal-article-meta { color: #666; margin-bottom: 15px; }
-#modal-author-intro { padding: 15px; background: #f9f9f9; border-left: 5px solid #ddd; margin-bottom: 20px; font-style: italic; }
-#modal-article-body { overflow-y: auto; line-height: 1.8; flex-grow: 1; }
 
+/* ★ 수정: 저자 소개 (가로 넘침 방지) ★ */
+#modal-author-intro { 
+    padding: 20px; 
+    background: #f9f9f9; 
+    border-left: 5px solid #ddd; 
+    margin-bottom: 30px; 
+    font-style: italic;
+    word-break: break-all; /* 긴 단어 강제 줄바꿈 */
+    overflow-wrap: break-word; /* 넘침 방지 */
+    width: 100%;
+}
+
+#modal-article-body { line-height: 1.8; font-size: 1.1em; }
+#modal-article-body img { max-width: 100%; height: auto; display: block; margin: 20px auto; }
