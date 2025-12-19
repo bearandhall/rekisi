@@ -15,98 +15,106 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let draggedElement = null;
     let offsetX, offsetY;
+    let articleNodes = [];
 
+    // 데이터 구조
     const articleData = window.articleData || {};
     const issue1Articles = Object.keys(articleData).filter(id => id !== 'intro_rekisi');
 
-    const HORIZONTAL_OFFSET = 180; 
+    const HORIZONTAL_OFFSET = 180;
     const AUTHOR_TITLE_OFFSET = 150;
-    const VERTICAL_SPACING = 50;
-    const INITIAL_LEFT = 50;
+    const VERTICAL_SPACING = 60;
 
-    let articleNodes = [];
+    // 1. 초기 배치 및 노드 생성
+    const init = () => {
+        const isMobile = window.innerWidth <= 600;
+        const baseTop = isMobile ? 130 : 60;
 
-    // 초기 배치
-    const isMobileView = () => window.innerWidth <= 600;
-    const logoY = isMobileView() ? 150 : 50;
-    logoNode.style.left = `${INITIAL_LEFT}px`;
-    logoNode.style.top = `${logoY}px`;
-    introNode.style.left = `${isMobileView() ? INITIAL_LEFT + 200 : INITIAL_LEFT + 250}px`;
-    introNode.style.top = `${logoY + 30}px`;
-    issue1Node.style.left = `${INITIAL_LEFT}px`;
-    issue1Node.style.top = `${logoY + 100}px`;
+        logoNode.style.left = '50px';
+        logoNode.style.top = `${baseTop}px`;
+        
+        introNode.style.left = `${isMobile ? 180 : 250}px`;
+        introNode.style.top = `${baseTop + 15}px`;
+        
+        issue1Node.style.left = '50px';
+        issue1Node.style.top = `${baseTop + 130}px`;
 
-    const addActionButton = (node, actionType) => {
-        if (node.dataset.nodeId === 'logo') return;
-        const btn = document.createElement('div');
-        btn.classList.add('node-action-btn');
-        btn.dataset.actionType = actionType;
-        btn.innerHTML = actionType === 'toggle' ? '목록' : '&#x25A1;';
-        node.appendChild(btn);
+        addActionButton(introNode, 'intro');
+        addActionButton(issue1Node, 'toggle');
+
+        issue1Articles.forEach((id) => {
+            const data = articleData[id];
+            
+            // 저자 노드
+            const auth = document.createElement('div');
+            auth.className = 'draggable-node node-author';
+            auth.dataset.nodeId = data.author;
+            auth.textContent = data.author;
+            auth.style.display = 'none';
+            addActionButton(auth, 'author-modal');
+            issue1ChildrenContainer.appendChild(auth);
+            articleNodes.push(auth);
+            
+            // 제목 노드
+            const tit = document.createElement('div');
+            tit.className = 'draggable-node node-title';
+            tit.dataset.nodeId = data.title;
+            tit.dataset.articleId = id;
+            tit.textContent = data.title;
+            tit.style.display = 'none';
+            addActionButton(tit, 'article-modal');
+            issue1ChildrenContainer.appendChild(tit);
+            articleNodes.push(tit);
+        });
     };
 
-    addActionButton(introNode, 'intro');
-    addActionButton(issue1Node, 'toggle');
+    function addActionButton(node, type) {
+        const btn = document.createElement('div');
+        btn.className = 'node-action-btn';
+        btn.dataset.actionType = type;
+        btn.innerHTML = type === 'toggle' ? '목록' : '&#x25A1;';
+        node.appendChild(btn);
+    }
 
-    issue1Articles.forEach((articleId) => {
-        const article = articleData[articleId];
-        const authorNode = document.createElement('div');
-        authorNode.classList.add('draggable-node', 'node-author');
-        authorNode.dataset.nodeId = article.author;
-        authorNode.textContent = article.author;
-        addActionButton(authorNode, 'author-modal');
-        authorNode.style.display = 'none';
-        issue1ChildrenContainer.appendChild(authorNode);
-        articleNodes.push(authorNode);
-        
-        const titleNode = document.createElement('div');
-        titleNode.classList.add('draggable-node', 'node-title');
-        titleNode.dataset.nodeId = article.title;
-        titleNode.dataset.articleId = articleId;
-        titleNode.textContent = article.title;
-        addActionButton(titleNode, 'article-modal');
-        titleNode.style.display = 'none';
-        issue1ChildrenContainer.appendChild(titleNode);
-        articleNodes.push(titleNode);
-    });
-
-    // 드래그 로직
-    const getClientCoords = (e) => (e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY });
+    // 2. 드래그 로직
+    const getCoords = (e) => e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
 
     const startDrag = (e) => {
         if (e.target.closest('.node-action-btn')) return;
-        const targetNode = e.target.closest('.draggable-node');
-        if (!targetNode) return;
-        draggedElement = targetNode;
-        const coords = getClientCoords(e);
-        const rect = targetNode.getBoundingClientRect();
-        offsetX = coords.x - rect.left;
-        offsetY = coords.y - rect.top;
-        draggedElement.style.zIndex = 40;
-        e.preventDefault();
+        const node = e.target.closest('.draggable-node');
+        if (!node) return;
+
+        draggedElement = node;
+        const c = getCoords(e);
+        const rect = node.getBoundingClientRect();
+        offsetX = c.x - rect.left;
+        offsetY = c.y - rect.top;
+        draggedElement.style.zIndex = 100;
+        if (e.cancelable) e.preventDefault(); 
     };
 
-    const drag = (e) => {
+    const doDrag = (e) => {
         if (!draggedElement) return;
-        e.preventDefault();
-        const coords = getClientCoords(e);
-        draggedElement.style.left = `${coords.x - offsetX + wrapper.scrollLeft}px`;
-        draggedElement.style.top = `${coords.y - offsetY + wrapper.scrollTop}px`;
+        const c = getCoords(e);
+        draggedElement.style.left = `${c.x - offsetX + wrapper.scrollLeft}px`;
+        draggedElement.style.top = `${c.y - offsetY + wrapper.scrollTop}px`;
         drawConnections();
     };
 
-    const endDrag = () => { if (draggedElement) draggedElement.style.zIndex = 30; draggedElement = null; };
+    const stopDrag = () => { if (draggedElement) draggedElement.style.zIndex = 30; draggedElement = null; };
 
     wrapper.addEventListener('mousedown', startDrag);
-    window.addEventListener('mousemove', drag);
-    window.addEventListener('mouseup', endDrag);
-    wrapper.addEventListener('touchstart', startDrag);
-    window.addEventListener('touchmove', drag);
-    window.addEventListener('touchend', endDrag);
+    window.addEventListener('mousemove', doDrag);
+    window.addEventListener('mouseup', stopDrag);
+    wrapper.addEventListener('touchstart', startDrag, { passive: false });
+    window.addEventListener('touchmove', doDrag, { passive: false });
+    window.addEventListener('touchend', stopDrag);
 
-    const getNodeWrapperPos = (nodeId) => {
-        const el = document.querySelector(`[data-node-id="${nodeId}"]`);
-        return el ? { left: parseFloat(el.style.left), top: parseFloat(el.style.top), width: el.offsetWidth, height: el.offsetHeight } : null;
+    // 3. 선 그리기 (점선 클래스 적용)
+    const getPos = (id) => {
+        const el = document.querySelector(`[data-node-id="${id}"]`);
+        if (!el || el.style.display === 'none') return null;
+        return { x: parseFloat(el.style.left), y: parseFloat(el.style.top), w: el.offsetWidth, h: el.offsetHeight };
     };
 
     const drawConnections = () => {
@@ -115,65 +123,89 @@ document.addEventListener('DOMContentLoaded', () => {
             connectionLinesSvg.style.width = `${wrapper.scrollWidth}px`;
             connectionLinesSvg.style.height = `${wrapper.scrollHeight}px`;
 
-            const conns = [];
-            conns.push({ parentId: 'logo', childId: '소개', type: 'logo' }, { parentId: 'logo', childId: '1호', type: 'logo' });
+            const conns = [
+                { p: 'logo', c: '소개', type: 'logo' },
+                { p: 'logo', c: '1호', type: 'logo' }
+            ];
+
             if (issue1Node.classList.contains('expanded')) {
                 issue1Articles.forEach(id => {
-                    const a = articleData[id];
-                    conns.push({ parentId: '1호', childId: a.author, type: 'parent' });
-                    conns.push({ parentId: a.author, childId: a.title, type: 'straight' });
+                    const data = articleData[id];
+                    conns.push({ p: '1호', c: data.author, type: 'parent' });
+                    conns.push({ p: data.author, c: data.title, type: 'straight' });
                 });
             }
 
             conns.forEach(conn => {
-                const p = getNodeWrapperPos(conn.parentId);
-                const c = getNodeWrapperPos(conn.childId);
-                const childEl = document.querySelector(`[data-node-id="${conn.childId}"]`);
-                if (p && c && childEl.style.display !== 'none') {
+                const p = getPos(conn.p);
+                const c = getPos(conn.c);
+                if (p && c) {
                     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    
-                    // ★ 클래스 추가 ★
-                    if (conn.type === 'straight') path.classList.add('line-straight');
+                    if (conn.type === 'straight') path.setAttribute('class', 'line-straight');
 
-                    const sX = p.left + (conn.type === 'logo' ? p.width/2 : p.width);
-                    const sY = p.top + (conn.type === 'logo' ? p.height : p.height/2);
-                    const eX = c.left;
-                    const eY = c.top + c.height/2;
-                    const off = 80;
-                    path.setAttribute('d', `M ${sX} ${sY} C ${sX + (conn.type === 'logo' ? 50 : off)} ${sY}, ${eX - (conn.type === 'logo' ? 50 : off)} ${eY}, ${eX} ${eY}`);
+                    const sX = p.x + (conn.type === 'logo' ? p.w/2 : p.w);
+                    const sY = p.y + (conn.type === 'logo' ? p.h : p.h/2);
+                    const eX = c.x;
+                    const eY = c.y + c.h/2;
+                    
+                    path.setAttribute('d', `M ${sX} ${sY} C ${sX + (conn.type==='logo'?40:70)} ${sY}, ${eX - (conn.type==='logo'?40:70)} ${eY}, ${eX} ${eY}`);
                     connectionLinesSvg.appendChild(path);
                 }
             });
         });
     };
 
-    // 토글 및 모달 클릭 로직 (이전과 동일)
+    // 4. 클릭 핸들러 (복구된 모달 로직)
     wrapper.addEventListener('click', (e) => {
         const btn = e.target.closest('.node-action-btn');
         if (!btn) return;
-        const type = btn.dataset.actionType;
+        
+        e.stopPropagation();
         const node = btn.closest('.draggable-node');
-        if (type === 'toggle') {
-            const exp = node.classList.toggle('expanded');
+        const action = btn.dataset.actionType;
+
+        if (action === 'toggle') {
+            const isExp = node.classList.toggle('expanded');
             articleNodes.forEach((n, i) => {
-                if (exp) {
+                if (isExp) {
                     n.style.display = 'block';
-                    n.style.left = `${node.offsetLeft + HORIZONTAL_OFFSET + (i%2 ? AUTHOR_TITLE_OFFSET : 0)}px`;
-                    n.style.top = `${node.offsetTop + Math.floor(i/2) * VERTICAL_SPACING}px`;
+                    const idx = Math.floor(i/2);
+                    const isTitle = i % 2 === 1;
+                    n.style.left = `${parseFloat(node.style.left) + HORIZONTAL_OFFSET + (isTitle ? AUTHOR_TITLE_OFFSET : 0)}px`;
+                    n.style.top = `${parseFloat(node.style.top) + idx * VERTICAL_SPACING}px`;
                 } else { n.style.display = 'none'; }
             });
-            setTimeout(drawConnections, 100);
-        } else if (type === 'article-modal') {
-            const a = articleData[node.dataset.articleId];
-            modalTitle.textContent = a.title;
-            modalBody.innerHTML = a.content.map(p => `<p>${p}</p>`).join('');
-            modal.style.display = 'block';
+            setTimeout(drawConnections, 60);
+        } 
+        else if (action === 'intro') {
+            const data = articleData['intro_rekisi'];
+            showModal(data.title, "REKISI 편집부", null, data.content);
         }
-        // ... 기타 모달 로직 생략 ...
+        else if (action === 'article-modal') {
+            const data = articleData[node.dataset.articleId];
+            showModal(data.title, data.author, data.author_intro, data.content);
+        }
+        else if (action === 'author-modal') {
+            const authorName = node.dataset.nodeId;
+            const data = Object.values(articleData).find(a => a.author === authorName);
+            showModal(`저자: ${authorName}`, null, data ? data.author_intro : "등록된 소개가 없습니다.", []);
+        }
     });
 
+    const showModal = (title, meta, intro, body) => {
+        modalTitle.textContent = title;
+        modalMeta.textContent = meta || "";
+        modalAuthorIntro.innerHTML = intro ? `<strong>ABOUT:</strong> ${intro}` : "";
+        modalAuthorIntro.style.display = intro ? "block" : "none";
+        modalBody.innerHTML = body.map(p => `<p>${p}</p>`).join('');
+        modal.style.display = 'block';
+        modalBody.scrollTop = 0;
+    };
+
     closeBtn.onclick = () => modal.style.display = 'none';
-    window.addEventListener('resize', drawConnections);
+    
+    init();
+    window.addEventListener('resize', () => { drawConnections(); });
     wrapper.addEventListener('scroll', drawConnections);
-    setTimeout(drawConnections, 100);
+    setTimeout(drawConnections, 300);
 });
