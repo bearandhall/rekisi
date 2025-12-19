@@ -145,9 +145,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // 저자 소개가 있을 때만 박스 표시
         introBox.innerHTML = i ? `<strong>저자 소개:</strong> ${i}` : "";
         introBox.style.display = i ? "block" : "none";
-        
+
+        const contentHTML = (b || []).map(p => `<p>${p}</p>`).join('');
+        document.getElementById('modal-article-body').innerHTML = contentHTML;
         // 본문 출력
-        document.getElementById('modal-article-body').innerHTML = (b || []).map(p => `<p>${p}</p>`).join('');
+        // document.getElementById('modal-article-body').innerHTML = (b || []).map(p => `<p>${p}</p>`).join('');
         modal.style.display = 'block';
         document.getElementById('article-modal').scrollTop = 0; // 모달 열 때 스크롤 맨 위로
     };
@@ -155,4 +157,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.close-btn').onclick = () => modal.style.display = 'none';
     init();
 });
+
 
