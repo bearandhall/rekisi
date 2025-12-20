@@ -39,7 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
         div.className = `draggable-node ${cls}`;
         div.dataset.nodeId = id;
         if(artId) div.dataset.articleId = artId;
+        
         div.textContent = txt;
+        const plainText = txt.replace(/<[^>]*>?/gm, ''); 
+        div.textContent = plainText;
         div.style.display = 'none';
         addBtn(div, act);
         return div;
@@ -157,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.close-btn').onclick = () => modal.style.display = 'none';
     init();
 });
+
 
 
 
