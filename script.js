@@ -39,13 +39,17 @@ document.addEventListener('DOMContentLoaded', () => {
         div.className = `draggable-node ${cls}`;
         div.dataset.nodeId = id;
         if(artId) div.dataset.articleId = artId;
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = txt; // 우선 HTML로 해석
+        const footnotes = tempDiv.querySelectorAll('.footnote');
+        footnotes.forEach(fn => fn.remove());
+
+        div.textContent = tempDiv.textContent;
         
-        div.textContent = txt;
-        const plainText = txt.replace(/<[^>]*>?/gm, ''); 
-        div.textContent = plainText;
-        div.style.display = 'none';
-        addBtn(div, act);
-        return div;
+    div.style.display = 'none';
+    addBtn(div, act);
+    return div;
     }
 
     function addBtn(parent, type) {
@@ -160,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.close-btn').onclick = () => modal.style.display = 'none';
     init();
 });
+
 
 
 
