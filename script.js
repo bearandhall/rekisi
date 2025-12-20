@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const showModal = (t, m, i, b) => {
-        document.getElementById('modal-article-title').textContent = t;
+        document.getElementById('modal-article-title').innerHTML = t;
         document.getElementById('modal-article-meta').textContent = m || "";
         const introBox = document.getElementById('modal-author-intro');
         
@@ -157,5 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.close-btn').onclick = () => modal.style.display = 'none';
     init();
 });
+
 
 
