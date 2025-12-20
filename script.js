@@ -150,9 +150,23 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-article-meta').textContent = m || "";
         const introBox = document.getElementById('modal-author-intro');
         
-        // 저자 소개가 있을 때만 박스 표시
-        introBox.innerHTML = i ? `${i}` : "";
-        introBox.style.display = i ? "block" : "none";
+        // // 저자 소개가 있을 때만 박스 표시
+        // introBox.innerHTML = i ? `${i}` : "";
+        // introBox.style.display = i ? "block" : "none";
+
+        if (i) {
+        // 1. innerHTML을 사용하여 태그(예: <br>)를 해석하게 합니다.
+        // 2. style 속성을 추가하여 엔터(\n)를 줄바꿈으로 바꾸고, 긴 단어를 강제 줄바꿈합니다.
+        introBox.innerHTML = `<strong>저자 소개:</strong><br>${i}`;
+        introBox.style.cssText = `
+            display: block; 
+            white-space: pre-wrap; 
+            word-break: break-all; 
+            overflow-wrap: break-word;
+        `;
+    } else {
+        introBox.style.display = "none";
+    }
 
         const contentHTML = (b || []).map(p => `<p>${p}</p>`).join('');
         document.getElementById('modal-article-body').innerHTML = contentHTML;
@@ -165,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.close-btn').onclick = () => modal.style.display = 'none';
     init();
 });
+
 
 
 
