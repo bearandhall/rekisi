@@ -113,3 +113,26 @@ sup a {
     display: inline;
 }
 
+#modal-article-body a.footnote, 
+#modal-article-body sup a {
+    color: #ff0000 !important;      /* 빨간색 */
+    text-decoration: none !important; /* 밑줄 제거 */
+    vertical-align: super;           /* 윗첨자 위치 */
+    font-size: 0.75em;               /* 크기 살짝 작게 */
+    font-weight: bold;
+}
+
+/* 3. 클릭(방문) 후에도 색상 변하지 않게 고정 */
+#modal-article-body a.footnote:visited,
+#modal-article-body a.footnote:active,
+#modal-article-body a.footnote:hover {
+    color: #ff0000 !important;
+    text-decoration: none !important;
+}
+
+#modal-article-body .footnote-list a,
+#modal-article-body [id^="fn"] a { 
+    color: inherit !important;       /* 본문 글자색 따라감 */
+    text-decoration: none !important; /* 밑줄 제거 */
+    vertical-align: baseline;        /* 설명문은 위첨자 해제 */
+}
