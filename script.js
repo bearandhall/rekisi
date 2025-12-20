@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const d = Object.values(data).find(v => v.author === name);
                 // ★ 수정: "저자명" 클릭 시 본문(b) 자리에 빈 배열 전달
                 // showModal(`${name}`, d ? d.author_intro : "", []);
-                showModal(`${name}`, "Author", d ? d.author_intro : "", []);
+                showModal(`${name}`, "", d ? d.author_intro : "", []);
             }
             draw();
         };
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const introBox = document.getElementById('modal-author-intro');
         
         // 저자 소개가 있을 때만 박스 표시
-        introBox.innerHTML = i ? `<strong>저자 소개:</strong> ${i}` : "";
+        introBox.innerHTML = i ? `${i}` : "";
         introBox.style.display = i ? "block" : "none";
 
         const contentHTML = (b || []).map(p => `<p>${p}</p>`).join('');
@@ -165,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.close-btn').onclick = () => modal.style.display = 'none';
     init();
 });
+
 
 
 
