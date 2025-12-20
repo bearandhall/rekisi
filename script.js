@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (i) {
         // 1. innerHTML을 사용하여 태그(예: <br>)를 해석하게 합니다.
         // 2. style 속성을 추가하여 엔터(\n)를 줄바꿈으로 바꾸고, 긴 단어를 강제 줄바꿈합니다.
-        introBox.innerHTML = `<strong>저자 소개:</strong><br>${i}`;
+        introBox.innerHTML = `<strong><br>${i}</strong>`;
         introBox.style.cssText = `
             display: block; 
             white-space: pre-wrap; 
@@ -179,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.close-btn').onclick = () => modal.style.display = 'none';
     init();
 });
+
 
 
 
