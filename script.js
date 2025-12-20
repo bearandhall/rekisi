@@ -84,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const name = parent.dataset.nodeId;
                 const d = Object.values(data).find(v => v.author === name);
                 // ★ 수정: "저자명" 클릭 시 본문(b) 자리에 빈 배열 전달
-                showModal(`${name}`, d ? d.author_intro : "", []);
+                // showModal(`${name}`, d ? d.author_intro : "", []);
+                showModal(`${name}`, "Author", introText, []);
             }
             draw();
         };
@@ -164,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.close-btn').onclick = () => modal.style.display = 'none';
     init();
 });
+
 
 
 
