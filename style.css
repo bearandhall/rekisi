@@ -103,3 +103,13 @@ sup a {
     margin-left: 2px;
 }
 
+
+.draggable-node a {
+    display: none;
+}
+
+/* 모달 안의 각주 링크는 다시 보이게 함 */
+#modal-article-title a {
+    display: inline;
+}
+
