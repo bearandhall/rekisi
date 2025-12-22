@@ -1,6 +1,6 @@
 /* Orbit 폰트 및 기본 설정 */
 * {
-    font-family: 'Orbit', sans-serif !important;
+    font-family: 'Orbit', sans-serif ;
     box-sizing: border-box;
 }
 
